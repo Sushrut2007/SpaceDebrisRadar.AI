@@ -1,0 +1,54 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb_convert/
+
+# --- Virtual Environments ---
+.venv/
+venv/
+env/
+ENV/
+*.env
+
+# --- Logs & Temp ---
+*.log
+*.tmp
+*.DS_Store
+Thumbs.db
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+
+# --- Streamlit ---
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# --- OS / Misc ---
+*.swp
+*.swo
+*~
+
+# --- Docs / Outputs ---
+*.pdf
+*.docx
+*.doc
+*.pptx
+*.ppt
+*.rtf
+
+# --- Ignore dataset related files/folders ---
+dataset Screenshots/
+data/
+
+# --- Project Specific ---
+college/
+references/
