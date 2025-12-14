@@ -22,6 +22,20 @@ def fetch_dataset(data_path):
     return df
 
 
+def save_dataset(df, data_path):
+    """ 
+     Save the dataset to the given directory path in the form of CSV.
+
+    Args:
+        df (DataFrame): Dataframe to save as CSV
+        data_path (String): CSV file location / HTTPS link of the dataset
+
+    Returns: None 
+    """
+
+    df.to_csv(data_path, index=False)
+    
+
 #----------------------
 # DATASET FEATURE HANDLING HELPERS
 #----------------------
@@ -40,25 +54,3 @@ def drop_features(df, *args):
     return df.drop(columns = args)
 
 
-def encode_category(df, col):
-    """
-    Encode categorical features using OneHotEncoder.
-
-    Args:
-        df (DataFrame): A dataframe containing categorical feature
-        col (String): Feature to OneHotEncode.
-    
-    Returns: Dataframe with encoded feature, Encoder.pkl
-    """
-
-    # Fit and transform
-    encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
-    X_encoded = encoder.fit_transform(df[[feature]])
-
-    # Get actual category names
-    encoded_cols = encoder.get_feature_names_out([feature])
-
-    # Convert to DataFrame with proper column names
-    df_encoded = pd.concat([df.drop(feature, axis=1), pd.DataFrame(X_encoded, columns=encoded_cols)], axis=1)
-
-    return df_encoded, encoder
