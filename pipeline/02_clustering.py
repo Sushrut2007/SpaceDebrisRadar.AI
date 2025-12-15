@@ -7,7 +7,7 @@
     2. Select non redundant features (corr >= 0.9) (Using 'utils' function)
     3. Train K-Means model (k=5)
 
-* Output - 'sat_scaled_labeled.csv' and 'sat_unscaled_labeled.csv' from a series of functions.
+* Output - Trained model saved.
 """
 
 # Required libraries for this component / file
@@ -29,7 +29,7 @@ def run_KMeans(df):
         df (DataFrame): Dataframe with 'clusterable' columns
     
     Returns: 
-        None
+        Dataframe with added 'CLUSTER' column
     """
 
     model = KMeans(n_clusters=5, random_state=101)
@@ -41,3 +41,5 @@ def run_KMeans(df):
 
     # Save the model as .joblib
     joblib.dump(model, '../models/clustering.joblib')
+
+    return df
