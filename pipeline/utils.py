@@ -54,3 +54,27 @@ def drop_features(df, *args):
     return df.drop(columns = args)
 
 
+def drop_redundant_features(df):
+    """
+    Drop features in a dataset having corr > 0.9.\n
+    Useful in KMeans and Isolation Forest due to high correlated features bottlenecks.
+
+    Args:
+        df (DataFrame): Dataframe with atleast 3 features
+    
+    Returns:
+        Dataframe with removed redundant features
+    """
+
+    
+    corr = df.corr(numeric_only=True).abs()
+    # keep only the upper triangle
+    upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
+
+    # Find the features having corr > 0.9
+    to_drop = [col for col in upper.columns if any(upper[col] > 0.9)]
+    # Drop the features
+    df = df.drop(columns = to_drop) 
+
+    return df
+

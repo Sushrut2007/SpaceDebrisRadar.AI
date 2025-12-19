@@ -9,7 +9,7 @@
     4. Drop features not required by ML models. (Using 'utils' function)
     5. Encode categorical features and scale the dataset. (Encode using 'utils' function)
 
-* Output - 'satellite_processed.csv'.
+* Output - 'satellite_processed.csv' from a series of functions.
 """
 
 # Required libraries for this component / file

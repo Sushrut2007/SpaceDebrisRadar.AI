@@ -7,7 +7,7 @@
     2. Select non redundant features (corr >= 0.9) (Using 'utils' function)
     3. Train K-Means model (k=5)
 
-* Output - Trained model saved.
+* Output - Trained model with cluster labeles.
 """
 
 # Required libraries for this component / file

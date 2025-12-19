@@ -174,5 +174,4 @@ def train_iso_model(unscaled_df, contamination, n_estimator, max_sample):
             unscaled_df.loc[mask, 'ANOMALY_LABEL'] = labels
             unscaled_df.loc[mask, 'ANOMALY_SCORE'] = score
 
-            
     return unscaled_df

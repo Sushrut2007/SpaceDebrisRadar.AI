@@ -31,7 +31,7 @@ def prepare_time_series(df):
     
     # Extract necessary columns 
     df = df[['EPOCH', 'NORAD_CAT_ID', 'CLUSTER']] 
-    # convert Epoch to a datetime object and extract only the data
+    # convert Epoch to a datetime object and extract only the date
     df['EPOCH'] = pd.to_datetime(df['EPOCH'])
     df['EPOCH'] = df['EPOCH'].dt.floor('D')
 
@@ -43,7 +43,7 @@ def prepare_time_series(df):
 def apply_linear_reg(shell_time_series):
     """
     Train a Linear regression model for satellite traffic risk analysis for each cluster.\n
-    If regresion cannto be applied to a cluster, apply default slope and intercept (0 or None).
+    If regression cannot be applied to a cluster, apply default slope and intercept (0 or None).
 
     Args:
         shell_time_series (DataFrame): Satellite dummy time series dataframe
@@ -70,7 +70,7 @@ def apply_linear_reg(shell_time_series):
         cluster_rows['ACTIVITY_FRACTION'] = cluster_rows['SATELLITE_COUNT'] / total_updates
 
         # Add the cluster rows to the activity_df
-        pd.concat([activity_df, cluster_rows])
+        activity_df = pd.concat([activity_df, cluster_rows])
 
         
         # Skip regressing clusters that have fewer than 3 data points
@@ -214,7 +214,7 @@ def trend_analysis(activity_df, cluster_models):
         
         elif anomaly_rate < 0.05:
             # Decrease risk by one level
-            if base_risk_level == 'high':
+            if base_risk_level == 'High':
                 final_risk_level = 'Moderate'
             elif base_risk_level == 'Moderate':
                 final_risk_level = 'Low'
@@ -226,6 +226,6 @@ def trend_analysis(activity_df, cluster_models):
         # 4. Append row data
         trend_summary.loc[len(trend_summary)] = [cluster, slope, current_fraction, trend_type, final_risk_level]
 
-        return trend_summary
+    return trend_summary
     
     
