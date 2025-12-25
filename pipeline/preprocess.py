@@ -120,7 +120,8 @@ def encode_category(df, feature):
     # Convert to DataFrame with proper column names
     df_encoded = pd.concat([df.drop(feature, axis=1), pd.DataFrame(X_encoded, columns=encoded_cols)], axis=1)
 
-    
+    # Save the encoder for future use
+    dump(encoder, 'data/models/encoder_sat_type.joblib')
 
     return df_encoded
 #--------------------------------------------------------

@@ -1,4 +1,4 @@
-"""
+﻿"""
 * Folder - pipeline
 * Folder purpose - Acts as a backend layer for Streamlit pages.
 * File - 04_trend_analysis.py
@@ -121,23 +121,23 @@ def trend_analysis(activity_df, cluster_models):
         
         normalized = slope / max_slope (bewteen  0 to 1)
         
-        > 0.70     → Strong Rising
-        0.30–0.70  → Moderate Rising
-        0.10–0.30  → Mild Rising
-        -0.10–0.10 → Flat
-        < -0.10    → Calming
+        > 0.70     ΓåÆ Strong Rising
+        0.30ΓÇô0.70  ΓåÆ Moderate Rising
+        0.10ΓÇô0.30  ΓåÆ Mild Rising
+        -0.10ΓÇô0.10 ΓåÆ Flat
+        < -0.10    ΓåÆ Calming
     
     Launch Risk Rules (Enhanced: Trend + Activity + Anomaly Stability)
 
     1) Base Risk (from trend + activity):
-        High      → slope ≥ 0.30  AND  activity > 0.30
-        Moderate  → slope 0.00–0.29  OR  activity 0.10–0.35
-        Low       → activity < 0.10  OR  trend flat/calming
+        High      ΓåÆ slope ΓëÑ 0.30  AND  activity > 0.30
+        Moderate  ΓåÆ slope 0.00ΓÇô0.29  OR  activity 0.10ΓÇô0.35
+        Low       ΓåÆ activity < 0.10  OR  trend flat/calming
 
     2) Anomaly Stability Modifier:
-        anomaly_rate > 0.15  → increase risk by one level
-        anomaly_rate < 0.05  → decrease risk if borderline
-        otherwise            → keep base risk same
+        anomaly_rate > 0.15  ΓåÆ increase risk by one level
+        anomaly_rate < 0.05  ΓåÆ decrease risk if borderline
+        otherwise            ΓåÆ keep base risk same
 
     Final Risk = Base Risk adjusted by anomaly stability.
 
