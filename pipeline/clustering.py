@@ -32,6 +32,7 @@ def run_KMeans(df):
         Dataframe with added 'CLUSTER' column
     """
 
+    df = df.copy() # Don't modify the original
     model = KMeans(n_clusters=5, random_state=101)
     # Train and test the model
     cluster_labels = model.fit_predict(df)
@@ -40,6 +41,6 @@ def run_KMeans(df):
     df['CLUSTER'] = cluster_labels
 
     # Save the model as .joblib
-    joblib.dump(model, '../models/clustering.joblib')
+    joblib.dump(model, 'data/models/clustering.joblib')
 
     return df

@@ -67,7 +67,7 @@ def drop_redundant_features(df):
         Dataframe with removed redundant features
     """
 
-    
+    df = df.copy() # Don't modify the original
     corr = df.corr(numeric_only=True).abs()
     # keep only the upper triangle
     upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
