@@ -43,9 +43,8 @@ def compute_basic_stats(scaled_df):
         clust_rows = scaled_df[scaled_df['CLUSTER'] == clust_id] # filter out only this cluster satellites
 
         numeric_cols = clust_rows.select_dtypes(include = np.number).drop(columns=['CLUSTER']) # get numeric column names
-        # Remove encoded columns
-        encoded_cols = [col for col in numeric_cols.columns if col.startswith('SAT_TYPE_')] 
-        numeric_cols = numeric_cols.drop(columns = encoded_cols).columns
+        # Remove encoded columns 
+        numeric_cols = numeric_cols.columns
         
         total_sd = 0 # Find the SD for each feature, then add the SD for the current cluster's all features
         for feature in numeric_cols:
@@ -137,7 +136,7 @@ def train_iso_model(unscaled_df, contamination, n_estimator, max_sample):
         max_sample (List): List of max_sample values
     
     Returns:
-        Dataframe with anomaly score and label
+        Dataframe with anomaly score and label and dictionary of models
     """
 
     iso_forest_models = {} # Store cluster ID: related iso model
@@ -174,4 +173,4 @@ def train_iso_model(unscaled_df, contamination, n_estimator, max_sample):
             unscaled_df.loc[mask, 'ANOMALY_LABEL'] = labels
             unscaled_df.loc[mask, 'ANOMALY_SCORE'] = score
 
-    return unscaled_df
+    return unscaled_df, iso_forest_models
