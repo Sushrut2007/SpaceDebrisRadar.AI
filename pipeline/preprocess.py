@@ -99,34 +99,6 @@ def create_features(df):
 #--------------------------------------------------------
 
 
-def encode_category(df, feature):
-    """
-    Encode categorical features using OneHotEncoder.
-
-    Args:
-        df (DataFrame): A dataframe containing categorical feature
-        col (String): Feature to OneHotEncode.
-    
-    Returns: Dataframe with encoded feature
-    """
-
-    # Fit and transform
-    encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
-    X_encoded = encoder.fit_transform(df[[feature]])
-
-    # Get actual category names
-    encoded_cols = encoder.get_feature_names_out([feature])
-
-    # Convert to DataFrame with proper column names
-    df_encoded = pd.concat([df.drop(feature, axis=1), pd.DataFrame(X_encoded, columns=encoded_cols)], axis=1)
-
-    # Save the encoder for future use
-    dump(encoder, 'data/models/encoder_sat_type.joblib')
-
-    return df_encoded
-#--------------------------------------------------------
-
-
 def scale_dataset(df):
     """
     Scale the dataset using 'Standardization' (mean=0, SD=1)
@@ -138,17 +110,11 @@ def scale_dataset(df):
         Dataframe with scaled values
     """
 
-    encoded_cols = [col for col in df.columns if col.startswith('SAT_TYPE_')]
-    # Drop the categorical cols not requiring scaling
-    numeric_cols = df.drop(columns = encoded_cols).columns
+    
+    scaler = StandardScaler()
+    df_scaled = scaler.fit_transform(df)
 
-    ct = ColumnTransformer([  # lets you apply different preprocessing to different columns
-        ('scaler', StandardScaler(), numeric_cols), # scale numeric feature
-        ('pass', 'passthrough', encoded_cols) # keep encoded columns as is
-    ])
-
-    df_scaled = ct.fit_transform(df)
-    # convert to dataframe                # numeric_col is a series, so convert to a list 
-    df_scaled = pd.DataFrame(df_scaled, columns = numeric_cols.tolist() + encoded_cols)
+    # convert to dataframe                
+    df_scaled = pd.DataFrame(df_scaled, columns = df.columns.tolist())
 
     return df_scaled
