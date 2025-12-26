@@ -1,6 +1,7 @@
 # utils.py
 # A bag of utils functions for reproducibility.
 
+import numpy as np
 import pandas as pd 
 from sklearn.preprocessing import OneHotEncoder
 
@@ -51,7 +52,7 @@ def drop_features(df, *args):
     Returns: Dataset with dropped features
     """
 
-    return df.drop(columns = args)
+    return df.drop(columns = list(args))
 
 
 def drop_redundant_features(df):
