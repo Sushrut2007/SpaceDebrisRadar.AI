@@ -16,6 +16,7 @@
 
 import numpy as np
 import pandas as pd
+import joblib
 from sklearn.ensemble import IsolationForest
 
 
@@ -141,22 +142,31 @@ def train_iso_model(unscaled_df, contamination, n_estimator, max_sample):
 
     iso_forest_models = {} # Store cluster ID: related iso model
     
+    # Prepare the anomaly realted features
+    unscaled_df['ANOMALY_LABEL'] = 0
+    unscaled_df['ANOMALY_SCORE'] = 0.0
     for cluster_id in sorted(list(set(unscaled_df['CLUSTER']))):
         # Extract rows for this cluster ID
         cluster_rows = unscaled_df[unscaled_df['CLUSTER'] == cluster_id]
-
+        
+        # Skip tiny clusters -> auto flag as anomalies
+        if len(cluster_rows) < 3:
+            unscaled_df.loc[unscaled_df['CLUSTER']== cluster_id, 'ANOMALY_LABEL'] = -1
+            unscaled_df.loc[unscaled_df['CLUSTER']== cluster_id, 'ANOMALY_SCORE'] = -0.5
+            continue
+        
         iso_model = IsolationForest(n_estimators=n_estimator[cluster_id], 
                                    max_samples=max_sample[cluster_id],
                                    contamination=contamination[cluster_id],
                                    max_features=1.0, # Consider all features in a tree
                                    random_state=101)
         # Train the model
-        iso_model.fit(cluster_rows.drop(columns=['CLUSTER']))
+        iso_model.fit(cluster_rows.drop(columns=['CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE']))
         iso_forest_models[cluster_id] = iso_model # Save the model to the dictionary
+        
+    # Save the iso model dictionary into joblib format
+    joblib.dump(iso_forest_models, 'data/models/anomalies.joblib')
 
-    # Prepare the anomaly realted features
-    unscaled_df['ANOMALY_LABEL'] = 0
-    unscaled_df['ANOMALY_SCORE'] = 0.0
         
     for cluster_id, model in iso_forest_models.items():
             # Select all rows belonging to this cluster
