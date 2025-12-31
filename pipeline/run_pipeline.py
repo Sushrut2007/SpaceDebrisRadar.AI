@@ -11,7 +11,8 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))  # Adds project root to path
-import preprocess, clustering, anomaly_detection, trend_analysis, utils
+# Use absolute imports from the 'pipeline' package for consistency when run from root
+from pipeline import preprocess, clustering, anomaly_detection, trend_analysis, utils
 
 
 # ============================================================================
@@ -59,7 +60,7 @@ def main():
     # ------------------------------------------------------------------------
     print_stage(1, "DATA INGESTION")
     # Fetch latest active.csv : https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=csv
-    raw_df = utils.fetch_dataset('data/raw/gp.csv')
+    raw_df = utils.fetch_dataset('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=csv')
     utils.save_dataset(raw_df, 'data/raw/gp.csv')
     print_success("Dataset fetched and saved")
     print_stats("Total records loaded", f"{len(raw_df):,}")
@@ -141,6 +142,10 @@ def main():
     
     # Join cluster and anomaly labels to engineered dataset for Streamlit ready O/P
     streamlit_ready_df = sat_final_engineered.join(sat_unscaled_labeled[['CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE']])
+    utils.save_dataset(streamlit_ready_df, 'data/outputs/anomaly_clustered.csv')
+    
+    utils.save_dataset(final_anomalies, 'data/outputs/amomalies.csv')
+
     print_success("Streamlit-ready dataset prepared")
 
     # Check if anomalies have extreme values
@@ -168,7 +173,16 @@ def main():
     # ------------------------------------------------------------------------
     # Prepare a time series dataset
     shell_time_series = trend_analysis.prepare_time_series(streamlit_ready_df)
-    print(shell_time_series.head(len(shell_time_series)))
+    
+    # Apply Linear Regression for cognition trend
+    activity_df, cluster_models = trend_analysis.apply_linear_reg(shell_time_series)
+    
+    
+    # Analyze the cognition pattern overtime to generate launch risk score
+    trend_summary = trend_analysis.trend_analysis(streamlit_ready_df, cluster_models)
+    
+    print(trend_summary.head())
+    
     
 # ============================================================================
 # ENTRY POINT
