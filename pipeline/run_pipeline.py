@@ -66,6 +66,14 @@ def main():
     print_stats("Total records loaded", f"{len(raw_df):,}")
     print_stats("Total features", raw_df.shape[1])
     
+    # ─────────────────────────────────────────────────────────────────────────
+    # raw_df COLUMNS:
+    #   OBJECT_NAME, OBJECT_ID, EPOCH, MEAN_MOTION, ECCENTRICITY, INCLINATION,
+    #   RA_OF_ASC_NODE, ARG_OF_PERICENTER, MEAN_ANOMALY, EPHEMERIS_TYPE,
+    #   CLASSIFICATION_TYPE, NORAD_CAT_ID, ELEMENT_SET_NO, REV_AT_EPOCH,
+    #   BSTAR, MEAN_MOTION_DOT, MEAN_MOTION_DDOT
+    # ─────────────────────────────────────────────────────────────────────────
+    
     # ------------------------------------------------------------------------
     # STAGE 2: DATA CLEANING
     # ------------------------------------------------------------------------
@@ -92,6 +100,16 @@ def main():
                             'OBJECT_ID', 'EPHEMERIS_TYPE', 'CLASSIFICATION_TYPE', 'ELEMENT_SET_NO', 'SAT_TYPE')
     print_success("Unnecessary features dropped")
     
+    # ─────────────────────────────────────────────────────────────────────────
+    # sat_final_engineered COLUMNS:
+    #   OBJECT_NAME, NORAD_CAT_ID, EPOCH,                    <- Identifiers
+    #   MEAN_MOTION, ECCENTRICITY, INCLINATION,              <- Original TLE
+    #   RA_OF_ASC_NODE, ARG_OF_PERICENTER, MEAN_ANOMALY,     <- Orbital angles
+    #   REV_AT_EPOCH, BSTAR, MEAN_MOTION_DOT, MEAN_MOTION_DDOT,
+    #   ORBIT_PERIOD_SEC, SEMI_MAJOR_AXIS, ORBIT_HEIGHT,     <- Derived features
+    #   PERIGEE, APOGEE, ORBITAL_SPEED, AGE_SINCE_LAUNCH
+    # ─────────────────────────────────────────────────────────────────────────
+    
     # ------------------------------------------------------------------------
     # STAGE 4: SCALING
     # ------------------------------------------------------------------------
@@ -115,12 +133,17 @@ def main():
     for cluster, count in sat_scaled_clustered['CLUSTER'].value_counts().sort_index().items():
         print(f"       Cluster {cluster}: {count:,} satellites")
     
+    # ─────────────────────────────────────────────────────────────────────────
+    # sat_scaled_clustered COLUMNS:
+    #   (All scaled ML features) + CLUSTER                   <- Cluster label (0, 1, 2...)
+    # ─────────────────────────────────────────────────────────────────────────
+    
     # ------------------------------------------------------------------------
     # STAGE 6: ANOMALY DETECTION
     # ------------------------------------------------------------------------
     print_stage(6, "ANOMALY DETECTION")
     # Compute stats, find parameters, train Isolation Forest
-    df = sat_scaled_clustered.copy()
+    df = sat_scaled_clustered.copy() # Use the same features the K-Means model used
     cluster_size_list, sd_list = anomaly_detection.compute_basic_stats(df)
     print_success("Basic statistics computed")
     
@@ -130,6 +153,14 @@ def main():
     sat_unscaled_labeled, iso_forest_models = anomaly_detection.train_iso_model(df, 
                                                 contamination_list, n_estimator_list, max_sample_list)
     print_success("Isolation Forest models trained")
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # sat_unscaled_labeled COLUMNS:
+    #   (All scaled ML features from sat_scaled_clustered),  <- Scaled feature values
+    #   CLUSTER,                                             <- Cluster label (0, 1, 2...)
+    #   ANOMALY_LABEL,                                       <- 1 = Normal, -1 = Anomaly
+    #   ANOMALY_SCORE                                        <- Isolation Forest decision score
+    # ─────────────────────────────────────────────────────────────────────────
     
     # ------------------------------------------------------------------------
     # STAGE 7: FINAL OUTPUT : Pure anomaly df and final streamlit ready df
@@ -141,11 +172,19 @@ def main():
     print_success("Anomaly deviation profiles computed")
     
     # Join cluster and anomaly labels to engineered dataset for Streamlit ready O/P
-    streamlit_ready_df = sat_final_engineered.join(sat_unscaled_labeled[['CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE']])
+    streamlit_ready_df = sat_engineered.join(sat_unscaled_labeled[['CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE']])
     utils.save_dataset(streamlit_ready_df, 'data/outputs/anomaly_clustered.csv')
     
-    utils.save_dataset(final_anomalies, 'data/outputs/amomalies.csv')
+    # Add OBJECT_NAME and NORAD_CAT_ID to final_anomalies for identification
 
+    final_anomalies = final_anomalies.join(sat_final_engineered[['OBJECT_NAME', 'NORAD_CAT_ID']])
+    # Reorder columns to put name and ID first
+    cols = final_anomalies.columns.tolist()
+    cols = ['OBJECT_NAME', 'NORAD_CAT_ID'] + [c for c in cols if c not in ['OBJECT_NAME', 'NORAD_CAT_ID']]
+    final_anomalies = final_anomalies[cols]
+    
+    utils.save_dataset(final_anomalies, 'data/outputs/anomalies.csv')
+    
     print_success("Streamlit-ready dataset prepared")
 
     # Check if anomalies have extreme values
@@ -180,6 +219,8 @@ def main():
     
     # Analyze the cognition pattern overtime to generate launch risk score
     trend_summary = trend_analysis.trend_analysis(streamlit_ready_df, cluster_models)
+
+    utils.save_dataset(trend_summary, 'data/outputs/trend_summary.csv')
     
     print(trend_summary.head())
     
