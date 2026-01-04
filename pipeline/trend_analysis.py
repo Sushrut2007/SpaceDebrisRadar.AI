@@ -14,6 +14,7 @@
 
 import numpy as np
 import pandas as pd
+import utils
 from sklearn.linear_model import LinearRegression
 
 
@@ -30,7 +31,7 @@ def prepare_time_series(df):
     """
     
     # Extract necessary columns 
-    df = df[['EPOCH', 'NORAD_CAT_ID', 'CLUSTER']] 
+    df = df[['EPOCH', 'NORAD_CAT_ID', 'CLUSTER']].copy() 
     # convert Epoch to a datetime object and extract only the date
     df['EPOCH'] = pd.to_datetime(df['EPOCH'])
     df['EPOCH'] = df['EPOCH'].dt.floor('D')
@@ -154,8 +155,8 @@ def trend_analysis(activity_df, cluster_models):
     # Find minimum and maximum model slopes across clusters
     min_slope = min(d['Slope'] for d in cluster_models)
     max_slope = max(d['Slope'] for d in cluster_models)
-    # Read the df containing anomaly label
-    df = pd.read_csv('../data/06_streamlit_ready/anomaly_clustered.csv')
+    
+    df = utils.fetch_dataset('data/outputs/anomaly_clustered.csv')
 
     
     # Use the clustered_model to add the cluster related information obtained through regression
