@@ -184,3 +184,57 @@ def train_iso_model(unscaled_df, contamination, n_estimator, max_sample):
             unscaled_df.loc[mask, 'ANOMALY_SCORE'] = score
 
     return unscaled_df, iso_forest_models
+
+
+def compute_anomaly_deviation_profile(anomaly_df, features):
+    """
+    Compute deviation profile for each anomaly to identify the most deviating feature.
+    
+    For each flagged satellite, calculates z-scores across features and identifies
+    which feature deviates most from the cluster mean.
+    
+    Args:
+        anomaly_df (DataFrame): Full dataset with CLUSTER and ANOMALY_LABEL columns
+        features (list): List of feature columns to analyze
+    
+    Returns:
+        DataFrame: Anomalies with TOP_DEVIATING_FEATURE and DEVIATION_SIGMA columns
+    """
+    # Get only anomalous rows
+    anomalies = anomaly_df[anomaly_df['ANOMALY_LABEL'] == -1].copy()
+    
+    if len(anomalies) == 0:
+        return anomalies
+    
+    # Initialize columns
+    anomalies['TOP_DEVIATING_FEATURE'] = ''
+    anomalies['DEVIATION_SIGMA'] = 0.0
+    
+    # For each anomaly, find the most deviating feature
+    for i, row in anomalies.iterrows():
+        cluster_id = row['CLUSTER']
+        cluster_data = anomaly_df[anomaly_df['CLUSTER'] == cluster_id]
+        
+        max_z_value = 0
+        max_z_feature = 'UNKNOWN'
+        
+        for feature in features:
+            if feature not in anomaly_df.columns:
+                continue
+                
+            cluster_mean = cluster_data[feature].mean()
+            cluster_std = cluster_data[feature].std()
+            
+            if cluster_std == 0 or pd.isna(cluster_std):
+                continue
+            
+            z_score = abs((row[feature] - cluster_mean) / cluster_std)
+            
+            if z_score > max_z_value:
+                max_z_value = z_score
+                max_z_feature = feature
+        
+        anomalies.loc[i, 'TOP_DEVIATING_FEATURE'] = max_z_feature
+        anomalies.loc[i, 'DEVIATION_SIGMA'] = max_z_value
+    
+    return anomalies
