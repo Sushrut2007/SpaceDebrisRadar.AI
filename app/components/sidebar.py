@@ -49,8 +49,9 @@ def render_sidebar():
         st.page_link("Home.py", label="Dashboard Overview", icon="🏠")
         st.page_link("pages/1_Orbital_Shells.py", label="Shell Analytics", icon="🛰️")
         st.page_link("pages/2_Anomaly_Inspector.py", label="Anomaly Inspector", icon="🔍")
-        st.page_link("pages/3_Report_Export.py", label="Report Center", icon="📄")
-        st.page_link("pages/4_Settings.py", label="Settings", icon="⚙️")
+        st.page_link("pages/3_Launch_Risk.py", label="Launch Risk Assessment", icon="🛡️")
+        st.page_link("pages/4_Report_Export.py", label="Report Center", icon="📄")
+        st.page_link("pages/5_Settings.py", label="Settings", icon="⚙️")
         
         st.divider()
         

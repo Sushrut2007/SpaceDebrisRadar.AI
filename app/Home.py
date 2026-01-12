@@ -262,36 +262,70 @@ with right_col:
     st.markdown("#### 🧪 Methodology")
     st.markdown('<div class="sub-glow"></div>', unsafe_allow_html=True)
     
+    # Initialize session state for methodology selection if not exists
+    if 'methodology_selection' not in st.session_state:
+        st.session_state.methodology_selection = 'Smart Grouping'
+
+    # Methodology Buttons
+    meth_col1, meth_col2, meth_col3 = st.columns(3)
+    
+    with meth_col1:
+        if st.button("Smart Grouping", use_container_width=True, type="primary" if st.session_state.methodology_selection == 'Smart Grouping' else "secondary"):
+            st.session_state.methodology_selection = 'Smart Grouping'
+            st.rerun()
+            
+    with meth_col2:
+        if st.button("Anomaly Detection", use_container_width=True, type="primary" if st.session_state.methodology_selection == 'Anomaly Detection' else "secondary"):
+            st.session_state.methodology_selection = 'Anomaly Detection'
+            st.rerun()
+            
+    with meth_col3:
+        if st.button("Future Risk Prediction", use_container_width=True, type="primary" if st.session_state.methodology_selection == 'Risk Prediction' else "secondary"):
+            st.session_state.methodology_selection = 'Risk Prediction'
+            st.rerun()
+
+    # Dynamic Content Display
     st.markdown(f"""
-    <div class="glass-card">
-        <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
+    <div class="glass-card" style="margin-top: 10px; min-height: 120px;">
+        <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 15px;">
             We track thousands of satellites in real-time, using a custom analysis engine to keep the skies safe:
         </p>
-        <div style="margin-top: 15px;">
-            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                <div style="background: rgba(0, 212, 255, 0.1); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #00d4ff; font-weight: bold;">1</div>
-                <div>
-                    <div style="font-weight: 600; color: #f8fafc; font-size: 0.9rem;">Smart Grouping</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">We organize satellites into groups based on their altitude and path, making it easier to spot outliers.</div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                <div style="background: rgba(124, 58, 237, 0.1); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7c3aed; font-weight: bold;">2</div>
-                <div>
-                    <div style="font-weight: 600; color: #f8fafc; font-size: 0.9rem;">Anomaly Detection</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">Our system watches for any satellite behaving "weirdly"—like drifting off course or moving at the wrong speed.</div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <div style="background: rgba(244, 63, 94, 0.1); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #f43f5e; font-weight: bold;">3</div>
-                <div>
-                    <div style="font-weight: 600; color: #f8fafc; font-size: 0.9rem;">Risk Prediction</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">By looking at current trends, we estimate where the most crowded areas will be in the future.</div>
-                </div>
+    """, unsafe_allow_html=True)
+
+    if st.session_state.methodology_selection == 'Smart Grouping':
+        st.markdown(f"""
+        <div style="display: flex; gap: 15px; animation: fadeIn 0.5s;">
+            <div style="background: rgba(0, 212, 255, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #00d4ff; font-weight: bold; font-size: 1.2rem;">1</div>
+            <div>
+                <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Smart Grouping</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">We organize satellites into groups based on their altitude and path, making it easier to spot outliers.</div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+        
+    elif st.session_state.methodology_selection == 'Anomaly Detection':
+        st.markdown(f"""
+        <div style="display: flex; gap: 15px; animation: fadeIn 0.5s;">
+            <div style="background: rgba(124, 58, 237, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7c3aed; font-weight: bold; font-size: 1.2rem;">2</div>
+            <div>
+                <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Anomaly Detection</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">Our system watches for any satellite behaving "weirdly"—like drifting off course or moving at the wrong speed.</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    elif st.session_state.methodology_selection == 'Risk Prediction':
+        st.markdown(f"""
+        <div style="display: flex; gap: 15px; animation: fadeIn 0.5s;">
+            <div style="background: rgba(244, 63, 94, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #f43f5e; font-weight: bold; font-size: 1.2rem;">3</div>
+            <div>
+                <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Future Risk Prediction</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">By looking at current trends, we estimate where the most crowded areas will be in the future.</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     

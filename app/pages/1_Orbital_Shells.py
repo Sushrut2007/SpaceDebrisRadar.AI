@@ -434,27 +434,31 @@ st.markdown("<br>", unsafe_allow_html=True)
 # =============================================================================
 
 def generate_shell_insight(data):
-    insights = []
+    insights = {}
     
     # Traffic/Density Insight
     if data['satellite_count'] > 2000:
-        insights.append(f"📡 <b>High-Traffic Zone:</b> With {data['satellite_count']:,} objects, this is one of the most crowded regions in LEO.")
+        insights['Traffic Analysis'] = f"📡 <b>High-Traffic Zone:</b> With {data['satellite_count']:,} objects, this is one of the most crowded regions in LEO."
     elif data['satellite_count'] > 1000:
-        insights.append(f"🛰️ <b>Moderate Density:</b> This shell maintains a steady flow of traffic with {data['satellite_count']:,} active objects.")
+        insights['Traffic Analysis'] = f"🛰️ <b>Moderate Density:</b> This shell maintains a steady flow of traffic with {data['satellite_count']:,} active objects."
     else:
-        insights.append(f"🌌 <b>Quiet Corridor:</b> A relatively sparse orbital region with only {data['satellite_count']:,} satellites tracked.")
+        insights['Traffic Analysis'] = f"🌌 <b>Quiet Corridor:</b> A relatively sparse orbital region with only {data['satellite_count']:,} satellites tracked."
         
     # Uniformity/Span Insight
     if data['altitude_span'] < 50:
-        insights.append("🎯 <b>Precision Alignment:</b> Satellites here are flying in a remarkably tight corridor (within 50km span).")
+        insights['Orbital Geometry'] = "🎯 <b>Precision Alignment:</b> Satellites here are flying in a remarkably tight corridor (within 50km span)."
     elif data['altitude_span'] > 250:
-        insights.append(f"🌊 <b>Broad Distribution:</b> Objects are scattered across a wide {data['altitude_span']:.0f}km altitude range.")
+        insights['Orbital Geometry'] = f"🌊 <b>Broad Distribution:</b> Objects are scattered across a wide {data['altitude_span']:.0f}km altitude range."
+    else:
+        insights['Orbital Geometry'] = f"📐 <b>Standard Distribution:</b> Objects observe a nominal spread pattern typical for this altitude ({data['altitude_span']:.0f}km span)."
         
     # Stability Insight
     if data['risk_level'] == 'Low':
-        insights.append("✅ <b>Operational Stability:</b> The overall behavior suggests a highly predictable and stable environment.")
+        insights['Stability Status'] = "✅ <b>Operational Stability:</b> The overall behavior suggests a highly predictable and stable environment."
     elif data['risk_level'] == 'High':
-        insights.append("⚠️ <b>Congestion Warning:</b> The rising trend and high density increase the risk of close-approach events.")
+        insights['Stability Status'] = "⚠️ <b>Congestion Warning:</b> The rising trend and high density increase the risk of close-approach events."
+    else:
+        insights['Stability Status'] = "⚖️ <b>Balanced Risk:</b> Activity is elevated but remains within manageable operational parameters."
 
     return insights
 
@@ -465,11 +469,41 @@ st.markdown(f"""
     <div style="font-size: 0.8rem; font-weight: 800; color: #00d4ff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;">
         🧠 Shell Intelligence Summary
     </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        {''.join([f'<div style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">{ins}</div>' for ins in shell_insights])}
+""", unsafe_allow_html=True)
+
+# Interactive Insights Logic
+if 'shell_insight_selection' not in st.session_state:
+    st.session_state.shell_insight_selection = 'Traffic Analysis'
+
+# Buttons
+si_col1, si_col2, si_col3 = st.columns(3)
+
+with si_col1:
+    if st.button("Traffic Analysis", key="btn_traffic", use_container_width=True, type="primary" if st.session_state.shell_insight_selection == 'Traffic Analysis' else "secondary"):
+        st.session_state.shell_insight_selection = 'Traffic Analysis'
+        st.rerun()
+
+with si_col2:
+    if st.button("Orbital Geometry", key="btn_geometry", use_container_width=True, type="primary" if st.session_state.shell_insight_selection == 'Orbital Geometry' else "secondary"):
+        st.session_state.shell_insight_selection = 'Orbital Geometry'
+        st.rerun()
+
+with si_col3:
+    if st.button("Stability Status", key="btn_stability", use_container_width=True, type="primary" if st.session_state.shell_insight_selection == 'Stability Status' else "secondary"):
+        st.session_state.shell_insight_selection = 'Stability Status'
+        st.rerun()
+
+# Display Content
+selected_insight = shell_insights.get(st.session_state.shell_insight_selection, "Select a category to view insights.")
+
+st.markdown(f"""
+    <div style="margin-top: 20px; margin-bottom: 20px; color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; animation: fadeIn 0.5s;">
+        {selected_insight}
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # =============================================================================
 # VISUALIZATIONS - CLUSTER FOCUSED
