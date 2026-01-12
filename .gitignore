@@ -47,7 +47,7 @@ Thumbs.db
 
 # --- Ignore dataset related files/folders ---
 dataset Screenshots/
-data/
+
 
 # --- Project Specific ---
 college/
