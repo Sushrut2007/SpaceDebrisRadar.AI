@@ -34,7 +34,7 @@ jobs:
         run: |
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git add data/outputs/*.csv
+            git add data/
             
             # Check if there are changes to commit
             if git diff --staged --quiet; then
