@@ -24,7 +24,7 @@ def main():
     # STAGE 1: DATA INGESTION
     # ------------------------------------------------------------------------
     # Fetch latest active.csv : https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=csv
-    raw_df = utils.fetch_dataset('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=csv')
+    raw_df = utils.fetch_dataset('data/raw/gp.csv')
     utils.save_dataset(raw_df, 'data/raw/gp.csv')
     
     # ─────────────────────────────────────────────────────────────────────────
@@ -135,6 +135,7 @@ def main():
     
     # Analyze the cognition pattern overtime to generate launch risk score
     trend_summary = trend_analysis.trend_analysis(streamlit_ready_df, cluster_models)
+    print(trend_summary.head())
 
     utils.save_dataset(trend_summary, 'data/outputs/trend_summary.csv')
 

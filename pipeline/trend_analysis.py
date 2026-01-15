@@ -111,6 +111,7 @@ def apply_linear_reg(shell_time_series):
 
     # Reset activity_df index
     activity_df = activity_df.reset_index(drop=True)
+    print(activity_df)
 
     return activity_df, cluster_models
 
