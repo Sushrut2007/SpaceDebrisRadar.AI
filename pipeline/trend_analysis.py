@@ -205,7 +205,7 @@ def trend_analysis(activity_df, cluster_models):
         anomaly_rate =  total_anomalies / total_sats # Compute anomaly rate
 
         # Adjust risk based on the anomaly rate
-        if anomaly_rate > 0.15:
+        if anomaly_rate > 0.08:
             # Increase risk by one level
             if base_risk_level == 'Low':
                 final_risk_level = 'Moderate'
