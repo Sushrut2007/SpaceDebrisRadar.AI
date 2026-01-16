@@ -280,7 +280,7 @@ with right_col:
             st.rerun()
             
     with meth_col3:
-        if st.button("Future Risk Prediction", use_container_width=True, type="primary" if st.session_state.methodology_selection == 'Risk Prediction' else "secondary"):
+        if st.button("Trend Analysis", use_container_width=True, type="primary" if st.session_state.methodology_selection == 'Risk Prediction' else "secondary"):
             st.session_state.methodology_selection = 'Risk Prediction'
             st.rerun()
 
@@ -319,8 +319,8 @@ with right_col:
         <div style="display: flex; gap: 15px; animation: fadeIn 0.5s;">
             <div style="background: rgba(244, 63, 94, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #f43f5e; font-weight: bold; font-size: 1.2rem;">3</div>
             <div>
-                <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Future Risk Prediction</div>
-                <div style="font-size: 0.9rem; color: #94a3b8;">By looking at current trends, we estimate where the most crowded areas will be in the future.</div>
+                <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Trend Analysis</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">We analyze historical data to identify which orbital shells are rapidly becoming crowded.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
