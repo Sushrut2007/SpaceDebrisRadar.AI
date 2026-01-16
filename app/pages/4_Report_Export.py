@@ -124,7 +124,7 @@ def generate_dynamic_insights():
     top_anomaly_type = anomalies['TOP_DEVIATING_FEATURE'].value_counts().index[0]
     top_count = anomalies['TOP_DEVIATING_FEATURE'].value_counts().iloc[0]
     expl = get_anomaly_explanation(top_anomaly_type)
-    insights.append(f"📊 Primary anomaly pattern: {expl['title']} ({top_count} occurrences) - {expl['description'][:80]}...")
+    insights.append(f"📊 Primary anomaly pattern: {expl['title']} ({top_count} occurrences) - {expl['description']}")
     
     # Trend analysis
     rising = len(trend_summary[trend_summary['TREND_TYPE'].str.contains('Rising', na=False)])
