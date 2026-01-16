@@ -358,7 +358,7 @@ with foot2:
     st.success("**Update:** Anomaly deviation profiling is now active in the inspector.")
 
 with foot3:
-    st.warning("**Note:** Data refreshed every 24h from Celestrak NORAD sources.")
+    st.warning("**Note:** Data refreshed every ~12h from Celestrak NORAD sources.")
 
 # =============================================================================
 # SIDEBAR
