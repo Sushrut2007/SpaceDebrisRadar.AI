@@ -145,16 +145,42 @@ st.markdown("### 🔍 Anomaly Type Breakdown")
 
 feature_counts = filtered['TOP_DEVIATING_FEATURE'].value_counts()
 if len(feature_counts) > 0:
-    cols = st.columns(min(5, len(feature_counts)))
-
-    for i, (feature, count) in enumerate(feature_counts.head(5).items()):
+    # Aggregate by display title to merge duplicates (e.g. unknown features)
+    title_data = {}
+    
+    for feature, count in feature_counts.items():
         expl = get_anomaly_explanation(feature)
+        title = expl['title'].replace(' Anomaly', '')
+        
+        if title in title_data:
+            title_data[title]['count'] += count
+        else:
+            title_data[title] = {
+                'count': count,
+                'icon': expl['icon']
+            }
+            
+    # Sort by count descending
+    sorted_titles = sorted(title_data.items(), key=lambda item: item[1]['count'], reverse=True)
+    
+    # Logic: If > 5 categories, show Top 4 + "Others" so the total matches
+    if len(sorted_titles) > 5:
+        top_items = sorted_titles[:4]
+        other_count = sum(item[1]['count'] for item in sorted_titles[4:])
+        top_items.append(('Others', {'count': other_count, 'icon': '📚'}))
+    else:
+        top_items = sorted_titles
+    
+    # Display
+    cols = st.columns(min(5, len(top_items)))
+
+    for i, (title, data) in enumerate(top_items):
         with cols[i]:
             st.markdown(f"""
             <div style="background: rgba(40,40,70,0.5); border-radius: 12px; padding: 16px; text-align: center;">
-                <div style="font-size: 1.5rem;">{expl['icon']}</div>
-                <div style="color: #e0e0e8; font-weight: 600; margin: 8px 0;">{count}</div>
-                <div style="color: #8888aa; font-size: 0.75rem;">{expl['title'].replace(' Anomaly', '')}</div>
+                <div style="font-size: 1.5rem;">{data['icon']}</div>
+                <div style="color: #e0e0e8; font-weight: 600; margin: 8px 0;">{data['count']}</div>
+                <div style="color: #8888aa; font-size: 0.75rem;">{title}</div>
             </div>
             """, unsafe_allow_html=True)
 else:

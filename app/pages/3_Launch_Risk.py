@@ -22,8 +22,8 @@ sidebar.render_sidebar()
 st.title("🛡️ Environmental Suitability Assessment")
 st.markdown("""
 <div style="font-size: 1.1rem; color: #cbd5e1; margin-bottom: 25px; line-height: 1.6;">
-    Evaluate the inherent environmental suitability of orbital regimes for mission insertion.
-    This tool classifies the hostility of the environment based on aggregated confinement, stability, and geometric complexity indicators.
+    Assess how suitable different orbital regimes are for your mission.
+    This tool helps you evaluate environmental risks based on satellite density, stability, and geometric complexity.
 </div>
 """, unsafe_allow_html=True)
 
@@ -187,15 +187,15 @@ with col_mission:
 with col_space:
     density_mode = st.selectbox("Environment Filter", options=["All Active Satellites", "Constellations Only", "Non-Constellation Objects"])
     if density_mode == "Constellations Only":
-        st.caption("ℹ️ **Focus:** Large LEO mega-constellations.")
+        st.caption("ℹ️ **Focus:** Analyzes major satellite constellations.")
     elif density_mode == "Non-Constellation Objects":
-        st.caption("ℹ️ **Focus:** Independent satellites and debris.")
+        st.caption("ℹ️ **Focus:** Analyzes independent satellites and debris.")
     else:
-         st.caption("ℹ️ **Focus:** Complete orbital population.")
+         st.caption("ℹ️ **Focus:** Analyzes the complete orbital population.")
 
     risk_profile = st.selectbox("Risk Sensitivity", options=["Conservative (Strict)", "Balanced (Standard)", "Tolerant (Experimental)"], index=1)
     if "Conservative" in risk_profile:
-        st.caption("⚖️ **Logic:** Penalizes any significant congestion or instability.")
+        st.caption("⚖️ **Logic:** Prioritizes safety per precautionary principles.")
     elif "Tolerant" in risk_profile:
         st.caption("⚖️ **Logic:** Tolerates density; flags only critical instability.")
     else:
@@ -223,9 +223,9 @@ st.markdown(f"""
     <div style="font-size: 3.5rem; font-weight: 800; color: {main_color}; margin: 5px 0;">{r_class.upper()}</div>
     <div style="font-size: 1.1rem; color: #e2e8f0; margin-top: 15px; font-weight: 500;">
         {
-            "Critical environmental pressure detected. Insertion not recommended." if r_class == 'High' else
-            "Elevated environmental activity. Standard collision avoidance protocols required." if r_class == 'Moderate' else
-            "Nominal environmental conditions. Favorable for insertion."
+            "This orbital regime is currently experiencing significant congestion or instability. Proceed with enhanced safety protocols." if r_class == 'High' else
+            "This region shows elevated activity levels. Standard collision avoidance measures are recommended." if r_class == 'Moderate' else
+            "This orbit is relatively clear with nominal stability. Conditions are favorable for mission planning."
         }
     </div>
 </div>
@@ -250,13 +250,11 @@ def indicator_card(title, value, help_text):
     """
 
 with c1:
-    st.markdown(indicator_card("Congestion Level", indicators['Congestion'], "Relative traffic intensity"), unsafe_allow_html=True)
+    st.markdown(indicator_card("Congestion Level", indicators['Congestion'], "Volume of active satellites in this band"), unsafe_allow_html=True)
 with c2:
-    st.markdown(indicator_card("Stability Condition", indicators['Stability'], "Prevalence of anomalous behavior"), unsafe_allow_html=True)
-# ... Indicator Cards ...
-# ... Indicator Cards ...
+    st.markdown(indicator_card("Stability Condition", indicators['Stability'], "Frequency of irregular satellite behavior"), unsafe_allow_html=True)
 with c3:
-    st.markdown(indicator_card("Geometric Complexity", indicators['Complexity'], "Intrinsic orbit crossing potential"), unsafe_allow_html=True)
+    st.markdown(indicator_card("Geometric Complexity", indicators['Complexity'], "Natural geometric complexity of the orbit"), unsafe_allow_html=True)
 
 # HAZARD PROFILE VISUALIZATION (Segmented Status Ring)
 col_vis, col_spacer = st.columns([1, 1.5])

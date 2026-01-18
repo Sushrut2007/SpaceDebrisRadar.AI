@@ -212,9 +212,12 @@ with m_col3:
 with m_col4:
     risk = metrics['overall_risk']
     risk_style = get_risk_style(risk)
+    # Adjust font size for longer text (e.g. "Moderate")
+    font_size = "2.2rem" if len(risk) > 5 else "3rem"
+    
     st.markdown(f"""
     <div class="glass-card">
-        <div class="premium-metric-value" style="background: {risk_style['color']}; -webkit-background-clip: text;">{risk}</div>
+        <div class="premium-metric-value" style="background: {risk_style['color']}; -webkit-background-clip: text; font-size: {font_size};">{risk}</div>
         <div class="premium-metric-label">Collision Risk Index</div>
     </div>
     """, unsafe_allow_html=True)
@@ -288,7 +291,7 @@ with right_col:
     st.markdown(f"""
     <div class="glass-card" style="margin-top: 10px; min-height: 120px;">
         <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 15px;">
-            We track thousands of satellites in real-time, using a custom analysis engine to keep the skies safe:
+            We track thousands of satellites in near real-time, using a custom analysis engine to keep the skies safe:
         </p>
     """, unsafe_allow_html=True)
 
