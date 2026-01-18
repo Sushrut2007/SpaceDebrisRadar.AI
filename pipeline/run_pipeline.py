@@ -72,9 +72,9 @@ def main():
     # STAGE 5: CLUSTERING
     # ------------------------------------------------------------------------
     # Remove redundant features and run K-Means
-    df = utils.drop_redundant_features(scaled_df)
+    df = utils.drop_redundant_features(scaled_df)    
     sat_scaled_clustered = clustering.run_KMeans(df)
-    
+    print(df.columns)
     # ─────────────────────────────────────────────────────────────────────────
     # sat_scaled_clustered COLUMNS:
     #   (All scaled ML features) + CLUSTER                   <- Cluster label (0, 1, 2...)
@@ -85,7 +85,7 @@ def main():
     # ------------------------------------------------------------------------
     # Compute stats, find parameters, train Isolation Forest
     print('hi')
-    df = sat_scaled_clustered.copy().drop(columns = ['AGE_SINCE_LAUNCH']) # Use the same features the K-Means model used (Except Age)
+    df = sat_scaled_clustered.copy().drop(columns = ['AGE_SINCE_LAUNCH', 'REV_AT_EPOCH']) # Use the same features the K-Means model used (Except Age)
     cluster_size_list, sd_list = anomaly_detection.compute_basic_stats(df)
 
     contamination_list, n_estimator_list, max_sample_list = anomaly_detection.find_iso_paramters(sd_list, cluster_size_list)
