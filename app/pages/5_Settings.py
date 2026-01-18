@@ -176,16 +176,62 @@ with col4:
                     response = requests.post(url, headers=headers, json=data, timeout=10)
                     
                     if response.status_code == 204:
-                         progress_bar.progress(100, text="Signal Sent Successfully!")
-                         st.markdown("""
-                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                                <h4 style="color: #10b981; margin: 0;">✅ Pipeline Started on GitHub Server</h4>
-                                <p style="color: #e0e0e0; margin-top: 5px;">
-                                    The heavy-lifting has been offloaded to the cloud. 
-                                    New data will appear here in approximately <strong>2-3 minutes</strong>.
-                                </p>
-                            </div>
-                        """, unsafe_allow_html=True)
+                         progress_bar.progress(20, text="Signal Sent! Waiting for GitHub to start...")
+                         
+                         # Poll for status
+                         workflow_id = "actions.yml" # Or workflow filename
+                         runs_url = f"https://api.github.com/repos/{repo_name}/actions/workflows/{workflow_id}/runs"
+                         
+                         # Give it a moment to register
+                         time.sleep(3)
+                         
+                         max_retries = 60 # 5 minutes max (60 * 5s)
+                         current_run = None
+                         
+                         for i in range(max_retries):
+                             try:
+                                 # Get latest run
+                                 r = requests.get(runs_url, headers=headers)
+                                 if r.status_code == 200:
+                                     runs = r.json().get("workflow_runs", [])
+                                     if runs:
+                                         # Look for the most recent run (created just now)
+                                         latest_run = runs[0]
+                                         run_status = latest_run.get("status") # queued, in_progress, completed
+                                         conclusion = latest_run.get("conclusion") # success, failure, etc.
+                                         
+                                         if run_status == "queued":
+                                             progress_bar.progress(30, text="Job is Queued on GitHub...")
+                                             update_status("Waiting for a server...", 1)
+                                         
+                                         elif run_status == "in_progress":
+                                              progress_bar.progress(60, text="Pipeline is Running on GitHub...")
+                                              update_status(f"Processing data remotely... (Time elapsed: {i*5}s)", 3)
+                                              
+                                         elif run_status == "completed":
+                                             if conclusion == "success":
+                                                 progress_bar.progress(100, text="Pipeline Finished Successfully!")
+                                                 st.balloons()
+                                                 st.markdown("""
+                                                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                                                        <h4 style="color: #10b981; margin: 0;">✅ Remote Update Complete</h4>
+                                                        <p style="color: #e0e0e0; margin-top: 5px;">
+                                                            New data has been committed. The app will reload shortly to reflect changes.
+                                                        </p>
+                                                    </div>
+                                                """, unsafe_allow_html=True)
+                                                 break # Done
+                                             else:
+                                                 st.error(f"Remote Pipeline Failed with status: {conclusion}")
+                                                 break
+                                         
+                                 time.sleep(5)
+                             except Exception as e:
+                                 st.warning(f"Could not fetch status: {e}")
+                                 time.sleep(5)
+                         else:
+                             st.info("Timeout: Pipeline is still running, but we stopped watching. usage limits.")
+                             
                     else:
                         raise Exception(f"GitHub API Error: {response.status_code} - {response.text}")
 
