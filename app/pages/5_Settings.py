@@ -211,15 +211,18 @@ with col4:
                                          elif run_status == "completed":
                                              if conclusion == "success":
                                                  progress_bar.progress(100, text="Pipeline Finished Successfully!")
-                                                 st.balloons()
+                                                 st.toast("Pipeline Update Completed Successfully!", icon="✅")
                                                  st.markdown("""
                                                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                                                        <h4 style="color: #10b981; margin: 0;">✅ Remote Update Complete</h4>
+                                                        <h4 style="color: #10b981; margin: 0;">✅ Remote Analysis Complete</h4>
                                                         <p style="color: #e0e0e0; margin-top: 5px;">
-                                                            New data has been committed. The app will reload shortly to reflect changes.
+                                                            Process finished. If new data was found, the app will auto-refresh shortly.
+                                                            <br><span style="font-size: 0.9em; opacity: 0.8;">(If nothing happens, your data is already up to date.)</span>
                                                         </p>
                                                     </div>
                                                 """, unsafe_allow_html=True)
+                                                 time.sleep(4)
+                                                 st.rerun()
                                                  break # Done
                                              else:
                                                  st.error(f"Remote Pipeline Failed with status: {conclusion}")
