@@ -143,6 +143,15 @@ with col4:
                 # ----------------------------------------------------------------
                 # HYBRID EXECUTION LOGIC
                 # ----------------------------------------------------------------
+                # Helper to update status with style
+                def update_status(text, step_num):
+                    status_placeholder.markdown(f"""
+                        <div class="progress-step-text">
+                            <span>🚀</span>
+                            <span>STAGE {step_num}/5: <span class="progress-highlight">{text}</span></span>
+                        </div>
+                    """, unsafe_allow_html=True)
+
                 # Check if running in Cloud mode with Secrets
                 github_token = st.secrets.get("GITHUB_TOKEN")
                 repo_name = "Sushrut2007/SpaceDebrisRadar.AI" # Update if your repo name is different
