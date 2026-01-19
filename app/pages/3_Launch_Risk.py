@@ -13,6 +13,7 @@ sys.path.insert(0, COMPONENTS_DIR)
 import data_loader
 import sidebar
 import ui_theme
+from components import context_explainer
 
 # Page Config
 st.set_page_config(page_title="Regional Suitability Assessment", page_icon="🛡️", layout="wide")
@@ -251,10 +252,13 @@ def indicator_card(title, value, help_text):
 
 with c1:
     st.markdown(indicator_card("Congestion Level", indicators['Congestion'], "Volume of active satellites in this band"), unsafe_allow_html=True)
+    context_explainer.render_explainer('congestion', f"Level: {indicators['Congestion']}")
 with c2:
     st.markdown(indicator_card("Stability Condition", indicators['Stability'], "Frequency of irregular satellite behavior"), unsafe_allow_html=True)
+    context_explainer.render_explainer('stability', f"Status: {indicators['Stability']}")
 with c3:
     st.markdown(indicator_card("Geometric Complexity", indicators['Complexity'], "Natural geometric complexity of the orbit"), unsafe_allow_html=True)
+    context_explainer.render_explainer('complexity', f"Rating: {indicators['Complexity']}")
 
 # HAZARD PROFILE VISUALIZATION (Segmented Status Ring)
 col_vis, col_spacer = st.columns([1, 1.5])

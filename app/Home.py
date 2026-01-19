@@ -26,6 +26,7 @@ from anomaly_explainer import (
 )
 from sidebar import render_sidebar
 from components import ui_theme
+from components import context_explainer
 
 # =============================================================================
 # PAGE CONFIG
@@ -192,6 +193,7 @@ with m_col1:
         <div class="premium-metric-label">Active Trackers</div>
     </div>
     """, unsafe_allow_html=True)
+    context_explainer.render_explainer('active_trackers', f"{metrics['total_satellites']:,} objects tracked")
 
 with m_col2:
     st.markdown(f"""
@@ -200,6 +202,7 @@ with m_col2:
         <div class="premium-metric-label">Orbital Regimes</div>
     </div>
     """, unsafe_allow_html=True)
+    context_explainer.render_explainer('orbital_regimes', f"{metrics['total_shells']} shells defined")
 
 with m_col3:
     st.markdown(f"""
@@ -221,6 +224,7 @@ with m_col4:
         <div class="premium-metric-label">Collision Risk Index</div>
     </div>
     """, unsafe_allow_html=True)
+    context_explainer.render_explainer('collision_risk_index', f"Current Level: {risk}")
 
 st.markdown("<br>", unsafe_allow_html=True)
 

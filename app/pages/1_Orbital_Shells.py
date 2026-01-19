@@ -26,6 +26,7 @@ from anomaly_explainer import (
 )
 from sidebar import render_sidebar
 from components import ui_theme
+from components import context_explainer
 
 # =============================================================================
 # PAGE CONFIG
@@ -372,10 +373,9 @@ with dyn_col1:
             </div>
         </div>
         <div style="margin-top: 15px; font-size: 0.75rem; color: #64748b; text-align: center;">
-            Speed variance of {(shell_data['max_speed'] - shell_data['min_speed']):.2f} km/s across clusters
-        </div>
     </div>
     """, unsafe_allow_html=True)
+    context_explainer.render_explainer('orbital_velocity', f"Avg Speed: {shell_data['avg_speed']} km/s")
 
 with dyn_col2:
     st.markdown(f"""
@@ -396,10 +396,9 @@ with dyn_col2:
             </div>
         </div>
         <div style="margin-top: 15px; font-size: 0.75rem; color: #64748b; text-align: center;">
-            Typical orbit takes ~{int(shell_data['avg_period'])} minutes
-        </div>
     </div>
     """, unsafe_allow_html=True)
+    context_explainer.render_explainer('orbital_period', f"Avg Period: {shell_data['avg_period']} min")
 
 with dyn_col3:
     st.markdown(f"""
@@ -420,10 +419,9 @@ with dyn_col3:
             </div>
         </div>
         <div style="margin-top: 15px; font-size: 0.75rem; color: #64748b; text-align: center;">
-            Altitude span: <span style="color: white; font-weight: 600;">{shell_data['altitude_span']} km</span>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+    context_explainer.render_explainer('inclination', f"Avg Inc: {shell_data['avg_inclination']}°")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
