@@ -1,6 +1,6 @@
 """
 SpaceDebrisRadar.AI - Orbital Shell Analysis Page
-Detailed examination of clustered orbital regions - FOCUS ON CLUSTERS.
+Comprehensive analysis of orbital shells.
 """
 
 import streamlit as st
@@ -140,7 +140,7 @@ st.markdown("""
         🌐 Orbital Shell Analysis
     </h1>
     <p style="color: #8888aa; font-size: 1rem;">
-        Deep dive into each orbital shell - satellite density, stability metrics, and congestion trends
+        Comprehensive analysis of orbital shells - satellite density, stability metrics, and congestion trends
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -438,15 +438,15 @@ def generate_shell_insight(data):
     
     # Traffic/Density Insight
     if data['satellite_count'] > 2000:
-        insights['Traffic Analysis'] = f"📡 <b>High-Traffic Zone:</b> With {data['satellite_count']:,} objects, this is one of the most crowded regions in LEO."
+        insights['Traffic Analysis'] = f"📡 <b>High-Density Shell:</b> With {data['satellite_count']:,} objects, this shell exhibits high congestion levels."
     elif data['satellite_count'] > 1000:
         insights['Traffic Analysis'] = f"🛰️ <b>Moderate Density:</b> This shell maintains a steady flow of traffic with {data['satellite_count']:,} active objects."
     else:
-        insights['Traffic Analysis'] = f"🌌 <b>Quiet Corridor:</b> A relatively sparse orbital region with only {data['satellite_count']:,} satellites tracked."
+        insights['Traffic Analysis'] = f"🌌 <b>Low Activity Region:</b> A lower density orbital region with {data['satellite_count']:,} satellites tracked."
         
     # Uniformity/Span Insight
     if data['altitude_span'] < 50:
-        insights['Orbital Geometry'] = "🎯 <b>Precision Alignment:</b> Satellites here are flying in a remarkably tight corridor (within 50km span)."
+        insights['Orbital Geometry'] = "🎯 <b>Highly Consistent Geometry:</b> Satellites here follow a strictly consistent altitude corridor (within 50km span)."
     elif data['altitude_span'] > 250:
         insights['Orbital Geometry'] = f"🌊 <b>Broad Distribution:</b> Objects are scattered across a wide {data['altitude_span']:.0f}km altitude range."
     else:
@@ -456,7 +456,7 @@ def generate_shell_insight(data):
     if data['risk_level'] == 'Low':
         insights['Stability Status'] = "✅ <b>Operational Stability:</b> The overall behavior suggests a highly predictable and stable environment."
     elif data['risk_level'] == 'High':
-        insights['Stability Status'] = "⚠️ <b>Congestion Warning:</b> The rising trend and high density increase the risk of close-approach events."
+        insights['Stability Status'] = "⚠️ <b>Congestion Warning:</b> Elevated collision risk due to density and rising trends."
     else:
         insights['Stability Status'] = "⚖️ <b>Balanced Risk:</b> Activity is elevated but remains within manageable operational parameters."
 

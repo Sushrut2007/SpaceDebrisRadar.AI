@@ -104,17 +104,17 @@ def generate_dynamic_insights():
     
     # Overall risk insight
     if metrics['overall_risk'] == 'High':
-        insights.append("⚠️ WATCH OUT: The risk of a collision is HIGH right now. Several areas are becoming dangerously crowded.")
+        insights.append("⚠️ CRITICAL ALERT: The risk of a collision is HIGH right now. Several areas are becoming dangerously crowded.")
     elif metrics['overall_risk'] == 'Moderate':
         insights.append("⚡ ADVISORY: Collision risk is moderate. Some areas should be double-checked before launching anything new.")
     else:
-        insights.append("✅ CLEAR: Collision risk is low. Things look pretty quiet across the orbital shells today.")
+        insights.append("✅ Status: Nominal. Collision risk is low. Activity is within standard parameters across the orbital shells.")
     
     # High-risk shells
     high_risk_shells = trend_summary[trend_summary['LAUNCH_RISK_LEVEL'] == 'High']
     if len(high_risk_shells) > 0:
         shell_ids = ', '.join([str(int(s)) for s in high_risk_shells['CLUSTER_ID'].values])
-        insights.append(f"🔴 Danger zones: Shells {shell_ids} are much more crowded than usual.")
+        insights.append(f"🔴 High Risk Zones: Shells {shell_ids} are much more crowded than usual.")
     
     # Most congested
     most_congested = cluster_summary.loc[cluster_summary['satellite_count'].idxmax()]

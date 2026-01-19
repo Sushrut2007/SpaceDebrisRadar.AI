@@ -22,7 +22,7 @@ sidebar.render_sidebar()
 st.title("🛡️ Environmental Suitability Assessment")
 st.markdown("""
 <div style="font-size: 1.1rem; color: #cbd5e1; margin-bottom: 25px; line-height: 1.6;">
-    Assess how suitable different orbital regimes are for your mission.
+    Evaluate how suitable different orbital shells are for your mission.
     This tool helps you evaluate environmental risks based on satellite density, stability, and geometric complexity.
 </div>
 """, unsafe_allow_html=True)
@@ -223,9 +223,9 @@ st.markdown(f"""
     <div style="font-size: 3.5rem; font-weight: 800; color: {main_color}; margin: 5px 0;">{r_class.upper()}</div>
     <div style="font-size: 1.1rem; color: #e2e8f0; margin-top: 15px; font-weight: 500;">
         {
-            "This orbital regime is currently experiencing significant congestion or instability. Proceed with enhanced safety protocols." if r_class == 'High' else
+            "This orbital shell is currently experiencing significant congestion or instability. Proceed with enhanced safety protocols." if r_class == 'High' else
             "This region shows elevated activity levels. Standard collision avoidance measures are recommended." if r_class == 'Moderate' else
-            "This orbit is relatively clear with nominal stability. Conditions are favorable for mission planning."
+            "Nominal Conditions: This orbit is relatively clear with stability within nominal ranges."
         }
     </div>
 </div>

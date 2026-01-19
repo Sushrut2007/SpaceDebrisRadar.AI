@@ -1,6 +1,6 @@
 """
 SpaceDebrisRadar.AI - Anomaly Inspection Page
-Focus on INDIVIDUAL FLAGGED SATELLITES - not clusters.
+Detailed review of satellites flagged for potential issues.
 """
 
 import streamlit as st
@@ -98,10 +98,10 @@ total_anomalies = len(anomalies)
 st.markdown(f"""
 <div style="padding: 10px 0 20px 0;">
     <h1 style="font-size: 2rem; font-weight: 700; color: #e0e0e8; margin-bottom: 4px;">
-        ⚠️ Anomaly Inspector
+        ⚠️ Anomaly Inspection
     </h1>
     <p style="color: #8888aa; font-size: 1rem;">
-        Examine <strong style="color: #ff6b6b;">{total_anomalies}</strong> individual satellites flagged for abnormal behavior
+        Detailed review of <strong style="color: #ff6b6b;">{total_anomalies}</strong> satellites flagged for potential issues
     </p>
 </div>
 """, unsafe_allow_html=True)

@@ -6,52 +6,52 @@ Translates technical anomaly data into human-readable explanations.
 FEATURE_EXPLANATIONS = {
     'MEAN_MOTION': {
         'title': 'Speed Change',
-        'description': 'This satellite is moving at an unusual speed. It might be dropping in altitude or could have intentionally moved.',
+        'description': 'Unusual orbital speed detected. The satellite may be maneuvering or experiencing decay.',
         'icon': '🚀'
     },
     'ECCENTRICITY': {
         'title': 'Orbit Shape Shift',
-        'description': 'The path of this satellite is more oval-shaped than expected, which can happen if its orbit becomes unstable.',
+        'description': 'The orbit shape is more elliptical than expected for this cluster.',
         'icon': '🔄'
     },
     'INCLINATION': {
         'title': 'Tilt Deviation',
-        'description': 'This satellite has tilted away from its usual path compared to other satellites in the same group.',
+        'description': 'The orbital plane is tilted away from the cluster\'s common inclination.',
         'icon': '📐'
     },
     'RA_OF_ASC_NODE': {
         'title': 'Path Alignment Drift',
-        'description': 'The point where this satellite crosses the equator has shifted significantly from its normal position.',
+        'description': 'The equatorial crossing point (RAAN) has shifted significantly from the group norm.',
         'icon': '🌐'
     },
     'ARG_OF_PERICENTER': {
         'title': 'Orbit Rotation',
-        'description': 'The lowest point of this satellite\'s orbit has rotated to an unusual position.',
+        'description': 'The orbit\'s lowest point (perigee) is rotated to an unusual position relative to the cluster.',
         'icon': '📍'
     },
     'MEAN_ANOMALY': {
         'title': 'Timing Gap',
-        'description': 'The satellite isn\'t quite where we expected it to be along its path today.',
+        'description': 'The satellite\'s position along the orbit deviates from the expected timing.',
         'icon': '⏱️'
     },
     'BSTAR': {
         'title': 'Atmospheric Drag',
-        'description': 'Air resistance is pulling on this satellite more than usual. This often happens if it starts tumbling.',
+        'description': 'Higher than expected air resistance acting on the object.',
         'icon': '🌬️'
     },
     'ORBIT_HEIGHT': {
         'title': 'Altitude Shift',
-        'description': 'This satellite is flying higher or lower than the other satellites in its group.',
+        'description': 'The orbital altitude deviates significantly from the cluster average.',
         'icon': '📏'
     },
     'AGE_SINCE_LAUNCH': {
         'title': 'Launch Timing',
-        'description': 'This satellite has been in space for a different amount of time than most others in this group.',
+        'description': 'Launch timing discrepancy relative to the cluster majority.',
         'icon': '📅'
     },
     'UNKNOWN': {
         'title': 'Unusual Behavior',
-        'description': 'Something about this satellite\'s path looks different from its peers, though we haven\'t pinned down exactly why yet.',
+        'description': 'Observed trajectory deviation not classified by specific parameters.',
         'icon': '⚠️'
     }
 }

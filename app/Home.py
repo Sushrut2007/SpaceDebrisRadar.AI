@@ -1,6 +1,6 @@
 """
 SpaceDebrisRadar.AI - Home Page (System Overview)
-Premium Redesign: High-end situational awareness dashboard.
+SpaceDebrisRadar | LEO Situational Awareness.
 """
 
 import streamlit as st
@@ -301,7 +301,7 @@ with right_col:
             <div style="background: rgba(0, 212, 255, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #00d4ff; font-weight: bold; font-size: 1.2rem;">1</div>
             <div>
                 <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Smart Grouping</div>
-                <div style="font-size: 0.9rem; color: #94a3b8;">We organize satellites into groups based on their altitude and path, making it easier to spot outliers.</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">Groups satellites with similar orbital patterns to organize the LEO environment.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -312,7 +312,7 @@ with right_col:
             <div style="background: rgba(124, 58, 237, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7c3aed; font-weight: bold; font-size: 1.2rem;">2</div>
             <div>
                 <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Anomaly Detection</div>
-                <div style="font-size: 0.9rem; color: #94a3b8;">Our system watches for any satellite behaving "weirdly"—like drifting off course or moving at the wrong speed.</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">Detects satellites showing unusual deviations from their expected group behavior.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -323,7 +323,7 @@ with right_col:
             <div style="background: rgba(244, 63, 94, 0.1); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #f43f5e; font-weight: bold; font-size: 1.2rem;">3</div>
             <div>
                 <div style="font-weight: 600; color: #f8fafc; font-size: 1.1rem; margin-bottom: 4px;">Trend Analysis</div>
-                <div style="font-size: 0.9rem; color: #94a3b8;">We analyze historical data to identify which orbital shells are rapidly becoming crowded.</div>
+                <div style="font-size: 0.9rem; color: #94a3b8;">Analyzes historical data to identify rapidly growing or congruent orbital shells.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
