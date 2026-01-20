@@ -29,6 +29,7 @@ Thumbs.db
 .idea/
 
 # --- Streamlit ---
+**/secrets.toml
 .streamlit/secrets.toml
 .streamlit/config.toml
 
