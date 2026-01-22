@@ -111,7 +111,7 @@ def assess_environment(alt_range, inc_range, density_mode, risk_profile, _sat_df
     anomalies = len(env_sats[env_sats['ANOMALY_LABEL'] == -1])
     rate = anomalies / count if count > 0 else 0
     
-    if rate > 0.15: stability = "Poor"        # >15% anomalous
+    if rate > 0.08: stability = "Poor"        # >8% anomalous
     elif rate > 0.05: stability = "Concern"   # 5-15% anomalous
     else: stability = "Nominal"               # <5% anomalous (Good)
     
