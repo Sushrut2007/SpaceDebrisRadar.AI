@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import utils
 from sklearn.linear_model import LinearRegression
+from pipeline import risk_model
 
 
 def prepare_time_series(df):
@@ -56,9 +57,12 @@ def apply_linear_reg(shell_time_series):
     cluster_models = [] # Store cluster specific model information
     activity_df = pd.DataFrame() # Store cluster data with fraction for each day
 
-    for cluster in range(shell_time_series['CLUSTER'].nunique()):
+    for cluster in shell_time_series['CLUSTER'].unique():
         # Filter rows for the current cluster
         cluster_rows = shell_time_series[shell_time_series['CLUSTER'] == cluster].copy()
+
+        if len(cluster_rows) == 0:
+            continue
         
 
         # Convert EPOCH into numeric days starting from the earliest date
@@ -165,67 +169,52 @@ def trend_analysis(activity_df, cluster_models):
         cluster = item['Cluster']
         slope = item['Slope']
         current_fraction = item['Current activity fraction']
-
+        
+        # --- 1. Get Trend Type & Strength ---
         if item['Model'] is None:
             trend_type = 'No Trend'
-            base_risk_level = 'N/A'
-
-            trend_summary.loc[len(trend_summary)] = [cluster, slope, current_fraction, trend_type, base_risk_level]
-            continue
-        # 1. Relative slope strength/trend
-        # Scale the relative strength betwwen 0 to 1
-        normalized = (slope - min_slope) / (max_slope - min_slope) 
-
-        # Trend classification
-        if normalized > 0.70:
-            trend_type = 'Strong Rising'
-        elif normalized >= 0.30:
-            trend_type = 'Moderate Rising'
-        elif normalized >= 0.10:
-            trend_type = 'Mild Rising'
-        elif normalized >= -0.10:
-            trend_type = 'Flat'
+            trend_strength = 0.0
         else:
-            trend_type = 'Calming'
-
-
-        # 2. Launch risk score classification -> Base risk
-        if (normalized >0.3) and (current_fraction >0.3): # Strong & Moderate rising
-            base_risk_level = 'High'
-        elif (0.29>=normalized>=0.0) and (0.35>=current_fraction>=0.0): # Mild rising / any rising trend
-            base_risk_level = 'Moderate'
-        else: # Flat / Stable / Calming
-            base_risk_level = 'Low'
+            trend_type, trend_strength = risk_model.classify_trend(slope, min_slope, max_slope)
             
-        # 3. Compute anomaly rate and find final risk score
+        
+        # --- 2. Get Cluster Stats for Trio ---
         cluster_data = df[df['CLUSTER'] == cluster]
         total_sats = len(cluster_data)
-        total_anomalies = len(cluster_data[cluster_data['ANOMALY_LABEL'] == -1])
-
-        anomaly_rate =  total_anomalies / total_sats # Compute anomaly rate
-
-        # Adjust risk based on the anomaly rate
-        if anomaly_rate > 0.08:
-            # Increase risk by one level
-            if base_risk_level == 'Low':
-                final_risk_level = 'Moderate'
-            elif base_risk_level == 'Moderate':
-                final_risk_level = 'High'
-            else:
-                final_risk_level = base_risk_level
         
-        elif anomaly_rate < 0.05:
-            # Decrease risk by one level
-            if base_risk_level == 'High':
-                final_risk_level = 'Moderate'
-            elif base_risk_level == 'Moderate':
-                final_risk_level = 'Low'
-            else:
-                final_risk_level = base_risk_level
+        if total_sats > 0:
+            total_anomalies = len(cluster_data[cluster_data['ANOMALY_LABEL'] == -1])
+            anomaly_rate = total_anomalies / total_sats
+            avg_inclination = cluster_data['INCLINATION'].mean()
         else:
-            final_risk_level = base_risk_level
+            anomaly_rate = 0.0
+            avg_inclination = 0.0
+            
+            
+        # --- 3. Calculate Risk Levels ---
+        # Calculate dynamic altitude span for density
+        if total_sats > 1:
+            span_km = cluster_data['ORBIT_HEIGHT'].max() - cluster_data['ORBIT_HEIGHT'].min()
+            span_km = max(span_km, 10.0) # Minimum 10km effective span to prevent spikes
+        else:
+            span_km = 100.0
+            
+        # Get labels AND criticality flags
+        congestion_label, congestion_crit = risk_model.get_congestion_level(total_sats, span_km)
+        stability_label, stability_crit = risk_model.get_stability_level(anomaly_rate)
+        complexity_label, complexity_crit = risk_model.get_complexity_level(avg_inclination)
+        
+        # --- 4. Final Risk Score ---
+        final_risk_level = risk_model.calculate_risk_level(
+            congestion_label, 
+            stability_label, 
+            complexity_label, 
+            trend_strength,
+            current_fraction
+        )
 
-        # 4. Append row data
+
+        # 5. Append row data
         trend_summary.loc[len(trend_summary)] = [cluster, slope, current_fraction, trend_type, final_risk_level]
 
     return trend_summary

@@ -5,15 +5,24 @@ import plotly.graph_objects as go
 import sys
 import os
 
-# Add components directory to path
-APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Add components and pipeline directory to path
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # .../app
+PROJECT_ROOT = os.path.dirname(APP_DIR) # .../
+PIPELINE_DIR = os.path.join(PROJECT_ROOT, 'pipeline')
 COMPONENTS_DIR = os.path.join(APP_DIR, 'components')
+
 sys.path.insert(0, COMPONENTS_DIR)
+sys.path.insert(1, PIPELINE_DIR) # Fix for 'import utils' in pipeline modules
 
 import data_loader
 import sidebar
 import ui_theme
 from components import context_explainer
+from pipeline import risk_model, trend_analysis
+import importlib
+importlib.reload(risk_model)
+importlib.reload(trend_analysis)
 
 # Page Config
 st.set_page_config(page_title="Regional Suitability Assessment", page_icon="🛡️", layout="wide")
@@ -32,6 +41,7 @@ st.markdown("""
 @st.cache_data
 def load_data():
     try:
+        # We only need trend_summary to get Global Benchmarks (min/max slope)
         trend_df = pd.read_csv(os.path.join(APP_DIR, '../data/outputs/trend_summary.csv'))
         sat_df = data_loader.load_satellite_data()
         return sat_df, trend_df
@@ -78,94 +88,81 @@ INC_MAP = {
 # CLASSIFICATION LOGIC (RULE-BASED)
 # =============================================================================
 
-def assess_environment(alt_range, inc_range, density_mode, risk_profile, _sat_df):
-    """
-    Classifies the environment into Low/Moderate/High Suitability Risk using qualitative indicators.
-    Returns dictionary with classification and indicator states.
-    """
-    alt_min, alt_max = alt_range
-    inc_min, inc_max = inc_range
-    
-    # 1. Filter Environment Context (Aggregated Population)
-    env_sats = _sat_df[
-        (_sat_df['ORBIT_HEIGHT'] >= alt_min) & (_sat_df['ORBIT_HEIGHT'] < alt_max) &
-        (_sat_df['INCLINATION'] >= inc_min) & (_sat_df['INCLINATION'] < inc_max)
-    ]
-    
-    if density_mode == "Constellations Only":
-        kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
-        env_sats = env_sats[env_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
-    elif density_mode == "Non-Constellation Objects":
-        kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
-        env_sats = env_sats[~env_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+# =============================================================================
+# RISK ASSESSMENT ADAPTER (Connects Selection -> Risk Model)
+# =============================================================================
 
-    # 2. Indicator A: Congestion Level (Relative Intensity)
-    # Heuristic thresholds for classification
-    count = len(env_sats)
-    # Determine thresholds based on altitude band width to normalize roughly
-    if count > 1000: congestion = "High"
-    elif count > 300: congestion = "Medium"
-    else: congestion = "Low"
+def get_live_risk_assessment(env_sats, trend_df, alt_span_km):
+    """
+    Calculates risk using the centralized Risk Model on the filtered dataset.
+    Performs Live Trend Analysis on the user selection.
+    """
     
-    # 3. Indicator B: Stability Condition (Anomaly Prevalence)
-    anomalies = len(env_sats[env_sats['ANOMALY_LABEL'] == -1])
-    rate = anomalies / count if count > 0 else 0
+    # 1. Calculate The Trio (Congestion, Stability, Complexity)
+    total_count = len(env_sats)
     
-    if rate > 0.08: stability = "Poor"        # >8% anomalous
-    elif rate > 0.05: stability = "Concern"   # 5-15% anomalous
-    else: stability = "Nominal"               # <5% anomalous (Good)
-    
-    # 4. Indicator C: Geometric Complexity (Intrinsic)
-    # Fixed by inclination class
-    mid_inc = (inc_min + inc_max) / 2
-    if mid_inc < 30: complexity = "Low"
-    elif mid_inc < 60: complexity = "Medium"
-    else: complexity = "High" # Polar/SSO
-    
-    # 5. Rule-Based Classification Matrix
-    # Base risk derived from worst indicators
-    
-    # Conservative Profile Rules (Safety First)
-    if "Conservative" in risk_profile:
-        if congestion == "High" or stability == "Poor":
-            risk_class = "High"
-        elif congestion == "Medium" and (stability == "Concern" or complexity == "High"):
-            risk_class = "High"
-        elif congestion == "Medium" or complexity == "High":
-             risk_class = "Moderate"
-        else:
-             risk_class = "Low"
-             
-    # Tolerant Profile Rules (Move Fast)
-    elif "Tolerant" in risk_profile:
-        if congestion == "High" and stability == "Poor":
-            risk_class = "High"
-        elif congestion == "High": # Tolerates high density if stable
-            risk_class = "Moderate" 
-        elif stability == "Poor":
-            risk_class = "Moderate"
-        else:
-            risk_class = "Low"
-            
-    # Balanced (Standard)
+    if total_count > 0:
+        anomalies = len(env_sats[env_sats['ANOMALY_LABEL'] == -1])
+        anomaly_rate = anomalies / total_count
+        avg_inclination = env_sats['INCLINATION'].mean()
     else:
-        if congestion == "High" and stability == "Poor":
-            risk_class = "High"
-        elif congestion == "High" or stability == "Poor":
-            risk_class = "Moderate" # Evaluates to Mod if only one factor is critical
-            # Adjust for complexity
-            if complexity == "High" and congestion == "High": risk_class = "High"
-        elif congestion == "Medium" and stability == "Concern":
-            risk_class = "Moderate"
+        anomaly_rate = 0.0
+        avg_inclination = 0.0
+        
+        
+    # Get labels AND flags
+    congestion_label, congestion_crit = risk_model.get_congestion_level(total_count, alt_span_km)
+    stability_label, stability_crit = risk_model.get_stability_level(anomaly_rate)
+    complexity_label, complexity_crit = risk_model.get_complexity_level(avg_inclination)
+    
+    # 2. Live Trend Analysis (The Forecast)
+    # Create a "Virtual Cluster" to feed into the standard pipeline function
+    current_fraction = 0.5 # Default fallback
+    
+    if total_count >= 3:
+        virtual_df = env_sats.copy()
+        virtual_df['CLUSTER'] = 9999 # Dummy ID
+        
+        # Reuse pipeline logic
+        ts = trend_analysis.prepare_time_series(virtual_df)
+        _, models = trend_analysis.apply_linear_reg(ts)
+        
+        # Extract the slope and activity from our single virtual model
+        if models and models[0]['Model'] is not None:
+            slope = models[0]['Slope']
+            current_fraction = models[0]['Current activity fraction']
         else:
-            risk_class = "Low"
-
+            slope = 0.0
+    else:
+        slope = 0.0
+        
+    # 3. Global Benchmarking
+    # Compare our local slope to the global system bounds
+    if not trend_df.empty:
+        min_global = trend_df['SLOPE'].min()
+        max_global = trend_df['SLOPE'].max()
+    else:
+        min_global, max_global = -0.001, 0.001
+        
+    trend_type, trend_strength = risk_model.classify_trend(slope, min_global, max_global)
+    
+    # 4. Final Risk Calculation
+    risk_class = risk_model.calculate_risk_level(
+        congestion_label, 
+        stability_label, 
+        complexity_label, 
+        trend_strength,
+        current_fraction
+    )
+    
     return {
         "class": risk_class,
         "indicators": {
-            "Congestion": congestion,
-            "Stability": stability,
-            "Complexity": complexity
+            "Congestion": congestion_label,
+            "Stability": stability_label,
+            "Complexity": complexity_label,
+            "Trend": trend_type,
+            "TrendStrength": trend_strength
         }
     }
 
@@ -206,7 +203,26 @@ with col_space:
 # MAIN ASSESSMENT
 # =============================================================================
 
-assessment = assess_environment(ALT_MAP[alt_band], INC_MAP[inc_class], density_mode, risk_profile, sat_df)
+# Filter Logic (Moved out of function for clarity)
+alt_min, alt_max = ALT_MAP[alt_band]
+inc_min, inc_max = INC_MAP[inc_class]
+
+env_sats = sat_df[
+    (sat_df['ORBIT_HEIGHT'] >= alt_min) & (sat_df['ORBIT_HEIGHT'] < alt_max) &
+    (sat_df['INCLINATION'] >= inc_min) & (sat_df['INCLINATION'] < inc_max)
+]
+
+if density_mode == "Constellations Only":
+    kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
+    env_sats = env_sats[env_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+elif density_mode == "Non-Constellation Objects":
+    kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
+    env_sats = env_sats[~env_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+    
+# Calculate Span
+alt_span = alt_max - alt_min
+
+assessment = get_live_risk_assessment(env_sats, trend_df, alt_span)
 r_class = assessment['class']
 indicators = assessment['indicators']
 
@@ -251,7 +267,7 @@ def indicator_card(title, value, help_text):
     """
 
 with c1:
-    st.markdown(indicator_card("Congestion Level", indicators['Congestion'], "Volume of active satellites in this band"), unsafe_allow_html=True)
+    st.markdown(indicator_card("Congestion Level", indicators['Congestion'], f"{len(env_sats)} active satellites in this band"), unsafe_allow_html=True)
     context_explainer.render_explainer('congestion', f"Level: {indicators['Congestion']}")
 with c2:
     st.markdown(indicator_card("Stability Condition", indicators['Stability'], "Frequency of irregular satellite behavior"), unsafe_allow_html=True)
@@ -325,7 +341,25 @@ if r_class != "Low":
     
     for i, idx in enumerate(neighbors):
         nb_name = ALT_OPTIONS[idx]
-        nb_res = assess_environment(ALT_MAP[nb_name], INC_MAP[inc_class], density_mode, risk_profile, sat_df)
+        
+        # Temp Filter for neighbor
+        nb_min, nb_max = ALT_MAP[nb_name]
+        nb_sats = sat_df[
+             (sat_df['ORBIT_HEIGHT'] >= nb_min) & (sat_df['ORBIT_HEIGHT'] < nb_max) &
+             (sat_df['INCLINATION'] >= inc_min) & (sat_df['INCLINATION'] < inc_max)
+        ]
+        # (Assuming density mode filters are re-applied or simplified here. 
+        # For speed, we might skip detailed name filtering for alternatives 
+        # or apply it if critical. Let's apply basic filters.)
+        
+        # Re-apply Quick Density Filter
+        if density_mode == "Constellations Only":
+             nb_sats = nb_sats[nb_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+        elif density_mode == "Non-Constellation Objects":
+             nb_sats = nb_sats[~nb_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+             
+        nb_span = nb_max - nb_min
+        nb_res = get_live_risk_assessment(nb_sats, trend_df, nb_span)
         
         # Determine if better: Low > Moderate > High
         rank = {"Low": 1, "Moderate": 2, "High": 3}
