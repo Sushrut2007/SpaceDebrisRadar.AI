@@ -1,6 +1,6 @@
 CLUSTER_ID,SLOPE,CURRENT_ACTIVITY_FRACTION,TREND_TYPE,LAUNCH_RISK_LEVEL
-1,0.06574,0.8456,Flat,Low
-3,0.08004,0.92553,Mild Rising,Moderate
-2,0.10312,0.97709,Mild Rising,Moderate
-0,0.13858,0.87614,Moderate Rising,High
-4,0.1968,0.97575,Strong Rising,Moderate
+0,0.04125,0.02402,Strong Rising,Low
+2,0.04865,0.05297,Strong Rising,Moderate
+4,0.05651,0.03839,Strong Rising,Moderate
+1,0.0,0.97436,No Trend,Moderate
+3,0.0,0.66667,No Trend,Moderate
