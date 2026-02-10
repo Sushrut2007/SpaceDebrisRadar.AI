@@ -191,13 +191,6 @@ with col_space:
     else:
          st.caption("ℹ️ **Focus:** Analyzes the complete orbital population.")
 
-    risk_profile = st.selectbox("Risk Sensitivity", options=["Conservative (Strict)", "Balanced (Standard)", "Tolerant (Experimental)"], index=1)
-    if "Conservative" in risk_profile:
-        st.caption("⚖️ **Logic:** Prioritizes safety per precautionary principles.")
-    elif "Tolerant" in risk_profile:
-        st.caption("⚖️ **Logic:** Tolerates density; flags only critical instability.")
-    else:
-        st.caption("⚖️ **Logic:** Standard multi-factor evaluation.")
 
 # =============================================================================
 # MAIN ASSESSMENT
