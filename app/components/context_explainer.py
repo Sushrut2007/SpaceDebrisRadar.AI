@@ -8,15 +8,15 @@ EXPLAINER_CONTENT = {
     # HOME PAGE TERMS
     'collision_risk_index': {
         'title': 'Collision Risk Index',
-        'text': 'A categorical assessment (Low, Moderate, High) of the current collision probability in LEO, calculated based on the density of objects and the frequency of anomalies within each orbital shell.'
+        'text': 'A categorical assessment (Low, Moderate, High) of current risk, based on the number of tracked objects and the frequency of anomalies within each orbital shell.'
     },
     'active_trackers': {
-        'title': 'Active Trackers',
+        'title': 'Tracked Objects',
         'text': 'The total count of man-made objects, including active satellites and debris, currently cataloged and monitored by the system.'
     },
     'orbital_regimes': {
         'title': 'Orbital Shells',
-        'text': 'Specific altitude bands (e.g., 500-550km) used to classify and aggregate satellite populations based on their vertical operational regions.'
+        'text': 'Altitude bands used to group satellites and analyze congestion and risk within LEO.'
     },
     
     # ORBITAL SHELLS PAGE TERMS

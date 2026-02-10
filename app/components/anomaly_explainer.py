@@ -71,11 +71,11 @@ RISK_ICONS = {
 }
 
 TREND_ICONS = {
-    'Strong Rising': '📈',
-    'Moderate Rising': '📈',
-    'Mild Rising': '↗️',
-    'Flat': '➡️',
-    'Calming': '📉',
+    'High Activity': '🔥',  # Was Strong Rising
+    'Active': '📈',         # Was Moderate Rising
+    'Low Activity': '↗️',   # Was Mild Rising
+    'Stable': '➡️',        # Was Flat
+    'Dormant': '📉',       # Was Calming
     'No Trend': '❓'
 }
 

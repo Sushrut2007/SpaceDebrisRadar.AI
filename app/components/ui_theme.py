@@ -28,7 +28,7 @@ def apply_theme():
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-radius: 12px;
-            padding: 24px;
+            padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             margin-bottom: 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
