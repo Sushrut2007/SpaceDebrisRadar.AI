@@ -55,15 +55,15 @@ def classify_trend(slope, min_global_slope, max_global_slope):
     normalized = max(-1.0, min(1.0, normalized))
 
     if normalized > 0.70:
-        return 'Strong Rising', normalized
+        return 'High Activity', normalized
     elif normalized >= 0.30:
-        return 'Moderate Rising', normalized
+        return 'Active', normalized
     elif normalized >= 0.10:
-        return 'Mild Rising', normalized
+        return 'Low Activity', normalized
     elif normalized >= -0.10:
-        return 'Flat', abs(normalized)
+        return 'Stable', abs(normalized)
     else:
-        return 'Calming', abs(normalized)
+        return 'Dormant', abs(normalized)
 
 
 def _bump_risk(current_level, direction):
