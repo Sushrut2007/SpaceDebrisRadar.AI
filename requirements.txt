@@ -26,3 +26,4 @@ idna==3.7
 charset-normalizer==3.3.2
 plotly==5.22.0
 reportlab == 4.4.7
+matplotlib
