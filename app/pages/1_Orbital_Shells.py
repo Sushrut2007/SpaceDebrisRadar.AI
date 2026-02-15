@@ -141,14 +141,10 @@ st.markdown("""
         🌐 Orbital Shell Analysis
     </h1>
     <p style="color: #8888aa; font-size: 1rem;">
-        Comprehensive analysis of orbital shells - satellite density, stability metrics, and congestion trends
+        Detailed assessment of orbital clusters — object distribution and environmental stability
     </p>
 </div>
 """, unsafe_allow_html=True)
-
-# =============================================================================
-# DATA
-# =============================================================================
 
 # =============================================================================
 # DATA
@@ -275,7 +271,7 @@ trend_icon = get_trend_icon(shell_data['trend_type'])
 
 with col_info:
     st.markdown(f"""
-    <div style="padding: 10px 20px; background: rgba(40,40,70,0.4); border-radius: 12px; display: inline-block;">
+    <div style="padding: 10px 20px; background: rgba(40,40,70,0.4); border-radius: 12px; display: inline-block; margin-top: 28px;">
         <span style="color: {risk_style['color']}; font-weight: 600; font-size: 1.2rem;">
             {risk_style['icon']} {shell_data['risk_level']} Risk
         </span>
@@ -350,7 +346,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 # ORBITAL DYNAMICS SECTION
 # =============================================================================
 
-st.markdown("### 🪐 Orbital Dynamics Profile")
+st.markdown("### 🪐 Orbital Parameter Summary")
 
 dyn_col1, dyn_col2, dyn_col3 = st.columns(3)
 
@@ -444,62 +440,60 @@ def generate_shell_insight(data):
         
     # Uniformity/Span Insight
     if data['altitude_span'] < 50:
-        insights['Orbital Geometry'] = "🎯 <b>Highly Consistent Geometry:</b> Satellites here follow a strictly consistent altitude corridor (within 50km span)."
+        insights['Orbital Geometry'] = f"🎯 <b>Narrow Altitude Band:</b> Objects occupy a {data['altitude_span']:.0f}km vertical range."
     elif data['altitude_span'] > 250:
-        insights['Orbital Geometry'] = f"🌊 <b>Broad Distribution:</b> Objects are scattered across a wide {data['altitude_span']:.0f}km altitude range."
+        insights['Orbital Geometry'] = f"🌊 <b>Large Altitude Band:</b> Objects occupy a {data['altitude_span']:.0f}km vertical range."
     else:
-        insights['Orbital Geometry'] = f"📐 <b>Standard Distribution:</b> Objects observe a nominal spread pattern typical for this altitude ({data['altitude_span']:.0f}km span)."
+        insights['Orbital Geometry'] = f"📐 <b>Normal Altitude Band:</b> Objects occupy a {data['altitude_span']:.0f}km vertical range."
         
     # Stability Insight
     if data['risk_level'] == 'Low':
-        insights['Stability Status'] = "✅ <b>Operational Stability:</b> The overall behavior suggests a highly predictable and stable environment."
+        insights['Stability Status'] = "✅ <b>Stable conditions:</b> The orbital environment is currently safe and predictable."
     elif data['risk_level'] == 'High':
-        insights['Stability Status'] = "⚠️ <b>Congestion Warning:</b> Elevated collision risk due to density and rising trends."
+        insights['Stability Status'] = "⚠️ <b>High risk:</b> Significant congestion and potential for collision detected."
     else:
-        insights['Stability Status'] = "⚖️ <b>Balanced Risk:</b> Activity is elevated but remains within manageable operational parameters."
+        insights['Stability Status'] = "⚖️ <b>Moderate risk:</b> Activity levels are elevated but manageable."
 
     return insights
 
 shell_insights = generate_shell_insight(shell_data)
 
-st.markdown(f"""
-<div style="background: linear-gradient(90deg, rgba(0, 212, 255, 0.05), rgba(124, 58, 237, 0.05)); border-left: 4px solid #00d4ff; padding: 25px; border-radius: 0 16px 16px 0; margin-bottom: 30px;">
-    <div style="font-size: 0.8rem; font-weight: 800; color: #00d4ff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;">
-        🧠 Shell Intelligence Summary
-    </div>
+st.markdown("### 🧠 Operational Observations")
+
+# Tabs for navigation
+# Custom CSS for bigger tabs
+st.markdown("""
+<style>
+    div[data-testid="stTabs"] button[data-baseweb="tab"] {
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0px 20px;
+    }
+</style>
 """, unsafe_allow_html=True)
 
-# Interactive Insights Logic
-if 'shell_insight_selection' not in st.session_state:
-    st.session_state.shell_insight_selection = 'Traffic Analysis'
+tab1, tab2, tab3 = st.tabs(["Traffic Analysis", "Orbital Geometry", "Stability Status"])
 
-# Buttons
-si_col1, si_col2, si_col3 = st.columns(3)
+with tab1:
+    st.markdown(f"""
+        <div style="margin-top: 10px; padding: 20px; background: rgba(30, 41, 59, 0.2); border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.1); color: #e2e8f0; font-size: 1.0rem; line-height: 1.6;">
+            {shell_insights['Traffic Analysis']}
+        </div>
+    """, unsafe_allow_html=True)
 
-with si_col1:
-    if st.button("Traffic Analysis", key="btn_traffic", use_container_width=True, type="primary" if st.session_state.shell_insight_selection == 'Traffic Analysis' else "secondary"):
-        st.session_state.shell_insight_selection = 'Traffic Analysis'
-        st.rerun()
+with tab2:
+    st.markdown(f"""
+        <div style="margin-top: 10px; padding: 20px; background: rgba(30, 41, 59, 0.2); border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.1); color: #e2e8f0; font-size: 1.0rem; line-height: 1.6;">
+            {shell_insights['Orbital Geometry']}
+        </div>
+    """, unsafe_allow_html=True)
 
-with si_col2:
-    if st.button("Orbital Geometry", key="btn_geometry", use_container_width=True, type="primary" if st.session_state.shell_insight_selection == 'Orbital Geometry' else "secondary"):
-        st.session_state.shell_insight_selection = 'Orbital Geometry'
-        st.rerun()
-
-with si_col3:
-    if st.button("Stability Status", key="btn_stability", use_container_width=True, type="primary" if st.session_state.shell_insight_selection == 'Stability Status' else "secondary"):
-        st.session_state.shell_insight_selection = 'Stability Status'
-        st.rerun()
-
-# Display Content
-selected_insight = shell_insights.get(st.session_state.shell_insight_selection, "Select a category to view insights.")
-
-st.markdown(f"""
-    <div style="margin-top: 20px; margin-bottom: 20px; color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; animation: fadeIn 0.5s;">
-        {selected_insight}
-    </div>
-</div>
-""", unsafe_allow_html=True)
+with tab3:
+    st.markdown(f"""
+        <div style="margin-top: 10px; padding: 20px; background: rgba(30, 41, 59, 0.2); border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.1); color: #e2e8f0; font-size: 1.0rem; line-height: 1.6;">
+            {shell_insights['Stability Status']}
+        </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -623,8 +617,3 @@ st.dataframe(
     use_container_width=True,
     hide_index=True
 )
-# =============================================================================
-# SIDEBAR
-# =============================================================================
-
-# (Moved to top)

@@ -376,7 +376,7 @@ if r_class != "Low":
     if found_better:
         st.success("Recommendation: The highlighted adjacent bands offer a more favorable environmental profile.")
     else:
-        st.warning("No significantly safer adjacent bands found within this inclination class.")
+        st.info(f"No safer adjacent altitudes found at this inclination ({inc_class}). Consider changing inclination or orbital regime.")
 
 st.markdown("---")
 st.caption("Methodology: Environmental Suitability is determined via qualitative classification of aggregated hazard indicators, not numeric probability modeling.")
