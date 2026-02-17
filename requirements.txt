@@ -27,3 +27,4 @@ charset-normalizer==3.3.2
 plotly==5.22.0
 reportlab == 4.4.7
 matplotlib
+shap==0.45.1

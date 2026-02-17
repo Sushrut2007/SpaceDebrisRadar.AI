@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import joblib
 from sklearn.ensemble import IsolationForest
+import shap
 
 
 def compute_basic_stats(scaled_df):
@@ -186,16 +187,17 @@ def train_iso_model(unscaled_df, contamination, n_estimator, max_sample):
     return unscaled_df, iso_forest_models
 
 
-def compute_anomaly_deviation_profile(anomaly_df, features):
+def compute_anomaly_shap_profile(anomaly_df, features, iso_forest_models):
     """
-    Compute deviation profile for each anomaly to identify the most deviating feature.
+    Compute SHAP-based attribution for each anomaly to identify the most responsible feature.
     
-    For each flagged satellite, calculates z-scores across features and identifies
-    which feature deviates most from the cluster mean.
+    Uses shap.TreeExplainer to audit the Isolation Forest model's decision for each 
+    flagged satellite.
     
     Args:
         anomaly_df (DataFrame): Full dataset with CLUSTER and ANOMALY_LABEL columns
-        features (list): List of feature columns to analyze
+        features (list): List of feature columns to analyze (must match training features)
+        iso_forest_models (dict): Dictionary of {cluster_id: TrainedModel}
     
     Returns:
         DataFrame: Anomalies with TOP_DEVIATING_FEATURE and DEVIATION_SIGMA columns
@@ -207,34 +209,61 @@ def compute_anomaly_deviation_profile(anomaly_df, features):
         return anomalies
     
     # Initialize columns
-    anomalies['TOP_DEVIATING_FEATURE'] = ''
+    anomalies['TOP_DEVIATING_FEATURE'] = 'UNKNOWN'
     anomalies['DEVIATION_SIGMA'] = 0.0
     
-    # For each anomaly, find the most deviating feature
-    for i, row in anomalies.iterrows():
-        cluster_id = row['CLUSTER']
-        cluster_data = anomaly_df[anomaly_df['CLUSTER'] == cluster_id]
+    # Cache explainers for each cluster to speed up processing
+    explainers = {}
+    for cluster_id, model in iso_forest_models.items():
+        try:
+            explainers[cluster_id] = shap.TreeExplainer(model)
+        except Exception as e:
+            print(f"Warning: Could not initialize SHAP explainer for cluster {cluster_id}: {e}")
+            explainers[cluster_id] = None
+
+    # For each anomaly, calculate SHAP values and Z-scores
+    for cluster_id in sorted(list(set(anomalies['CLUSTER']))):
+        # Extract rows for this cluster and model
+        cluster_mask = anomalies['CLUSTER'] == cluster_id
+        cluster_anomalies = anomalies[cluster_mask]
         
-        max_z_value = 0
-        max_z_feature = 'UNKNOWN'
+        if len(cluster_anomalies) == 0:
+            continue
+            
+        # 1. SHAP ATTRIBUTION (Scientific Reason)
+        explainer = explainers.get(cluster_id)
+        if explainer:
+            # Extract features (ensure correct column order)
+            X = cluster_anomalies[features]
+            shap_values = explainer.shap_values(X)
+            
+            # Find feature with largest absolute contribution to anomaly score
+            # shap_values from TreeExplainer for IsoForest is (n_samples, n_features)
+            # Higher absolute value means more responsibility for isolation
+            max_contribution_idx = np.argmax(np.abs(shap_values), axis=1)
+            
+            # Map index back to feature name
+            top_features = [features[idx] for idx in max_contribution_idx]
+            anomalies.loc[cluster_mask, 'TOP_DEVIATING_FEATURE'] = top_features
         
-        for feature in features:
-            if feature not in anomaly_df.columns:
+        # 2. TARGETED Z-SCORE DEVIATION (Precise UI Context)
+        # We calculate the Z-score *only* for the feature SHAP identified.
+        # This ensures the Sigma score on the UI card accurately represents the reason shown.
+        cluster_full_data = anomaly_df[anomaly_df['CLUSTER'] == cluster_id]
+        for i, row in cluster_anomalies.iterrows():
+            target_feature = anomalies.loc[i, 'TOP_DEVIATING_FEATURE']
+            
+            if target_feature == 'UNKNOWN' or target_feature not in features:
+                anomalies.loc[i, 'DEVIATION_SIGMA'] = 0.0
                 continue
                 
-            cluster_mean = cluster_data[feature].mean()
-            cluster_std = cluster_data[feature].std()
+            mean = cluster_full_data[target_feature].mean()
+            std = cluster_full_data[target_feature].std()
             
-            if cluster_std == 0 or pd.isna(cluster_std):
-                continue
+            if std > 0 and not pd.isna(std):
+                z_score = abs((row[target_feature] - mean) / std)
+                anomalies.loc[i, 'DEVIATION_SIGMA'] = z_score
+            else:
+                anomalies.loc[i, 'DEVIATION_SIGMA'] = 0.0
             
-            z_score = abs((row[feature] - cluster_mean) / cluster_std)
-            
-            if z_score > max_z_value:
-                max_z_value = z_score
-                max_z_feature = feature
-        
-        anomalies.loc[i, 'TOP_DEVIATING_FEATURE'] = max_z_feature
-        anomalies.loc[i, 'DEVIATION_SIGMA'] = max_z_value
-    
     return anomalies

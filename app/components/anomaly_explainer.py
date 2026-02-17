@@ -49,6 +49,16 @@ FEATURE_EXPLANATIONS = {
         'description': 'Launch timing discrepancy relative to the cluster majority.',
         'icon': '📅'
     },
+    'MEAN_MOTION_DOT': {
+        'title': 'Orbital Decay/Maneuver',
+        'description': 'Rapid change in orbital speed drift, indicative of atmospheric drag or active propulsion.',
+        'icon': '📉'
+    },
+    'MEAN_MOTION_DDOT': {
+        'title': 'Trajectory Shift',
+        'description': 'Abnormal acceleration change rate detected in the satellite\'s orbit.',
+        'icon': '💥'
+    },
     'UNKNOWN': {
         'title': 'Unusual Behavior',
         'description': 'Observed trajectory deviation not classified by specific parameters.',
