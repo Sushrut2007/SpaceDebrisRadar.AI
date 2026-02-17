@@ -74,7 +74,7 @@ def main():
     # Remove redundant features and run K-Means
     df = utils.drop_redundant_features(scaled_df)    
     sat_scaled_clustered = clustering.run_KMeans(df)
-    print(df.columns)
+    print("K-Means Processing Features:", df.columns.tolist())
     # ─────────────────────────────────────────────────────────────────────────
     # sat_scaled_clustered COLUMNS:
     #   (All scaled ML features) + CLUSTER                   <- Cluster label (0, 1, 2...)
@@ -83,33 +83,35 @@ def main():
     # ------------------------------------------------------------------------
     # STAGE 6: ANOMALY DETECTION
     # ------------------------------------------------------------------------
-    # Compute stats, find parameters, train Isolation Forest
-    print('hi')
-    df = sat_scaled_clustered.copy().drop(columns = ['AGE_SINCE_LAUNCH', 'REV_AT_EPOCH']) # Use the same features the K-Means model used (Except Age)
-    cluster_size_list, sd_list = anomaly_detection.compute_basic_stats(df)
+    # Features used: Same as K-Means (redundancy filtered) but UNSCALED
+    # 1. Identify features (everything in clustered df except the cluster label itself)
+    active_features = [c for c in sat_scaled_clustered.columns if c != 'CLUSTER']
+    
+    # 2. Slice from unscaled df and then add the cluster label
+    df = sat_final_engineered[active_features].copy()
+    df['CLUSTER'] = sat_scaled_clustered['CLUSTER']
+    
+    # 3. Apply the specific drops you require
+    df = df.drop(columns=['AGE_SINCE_LAUNCH', 'REV_AT_EPOCH'], errors='ignore')
+    
+    print("Unscaled Training Features:", df.columns.tolist())
+    print("Total Column Count:", len(df.columns))
 
+    cluster_size_list, sd_list = anomaly_detection.compute_basic_stats(df)
     contamination_list, n_estimator_list, max_sample_list = anomaly_detection.find_iso_paramters(sd_list, cluster_size_list)
     
     sat_unscaled_labeled, iso_forest_models = anomaly_detection.train_iso_model(df, 
                                                 contamination_list, n_estimator_list, max_sample_list)
     
-    # ─────────────────────────────────────────────────────────────────────────
-    # sat_unscaled_labeled COLUMNS:
-    #   (All scaled ML features from sat_scaled_clustered),  <- Scaled feature values
-    #   CLUSTER,                                             <- Cluster label (0, 1, 2...)
-    #   ANOMALY_LABEL,                                       <- 1 = Normal, -1 = Anomaly
-    #   ANOMALY_SCORE                                        <- Isolation Forest decision score
-    # ─────────────────────────────────────────────────────────────────────────
-    
     # ------------------------------------------------------------------------
     # STAGE 7: FINAL OUTPUT : Pure anomaly df and final streamlit ready df
     # ------------------------------------------------------------------------
     
-    # Compute per anomaly feature deviation
-    anomaly_features_used = utils.drop_features(df, 'CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE').columns
-    final_anomalies = anomaly_detection.compute_anomaly_deviation_profile(sat_unscaled_labeled, anomaly_features_used)
+    # Compute per anomaly feature deviation (Using SHAP for scientific attribution)
+    anomaly_features_used = utils.drop_features(sat_unscaled_labeled, 'CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE').columns
+    final_anomalies = anomaly_detection.compute_anomaly_shap_profile(sat_unscaled_labeled, anomaly_features_used, iso_forest_models)
     
-    # Join cluster and anomaly labels to engineered dataset for Streamlit ready O/P
+    # Join labels to engineered dataset for Streamlit ready O/P
     streamlit_ready_df = sat_engineered.join(sat_unscaled_labeled[['CLUSTER', 'ANOMALY_LABEL', 'ANOMALY_SCORE']])
     utils.save_dataset(streamlit_ready_df, 'data/outputs/anomaly_clustered.csv')
     print('done')
