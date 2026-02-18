@@ -83,22 +83,16 @@ def main():
     # ------------------------------------------------------------------------
     # STAGE 6: ANOMALY DETECTION
     # ------------------------------------------------------------------------
-    # Features used: Same as K-Means (redundancy filtered) but UNSCALED
-    # 1. Identify features (everything in clustered df except the cluster label itself)
-    active_features = [c for c in sat_scaled_clustered.columns if c != 'CLUSTER']
+    # --- Compute Parameters (Using Scaled Data) ---
+    df_scaled = sat_scaled_clustered.drop(columns=['AGE_SINCE_LAUNCH', 'REV_AT_EPOCH'], errors='ignore')
+    cluster_size_list, sd_list = anomaly_detection.compute_basic_stats(df_scaled)
+    contamination_list, n_estimator_list, max_sample_list = anomaly_detection.find_iso_paramters(sd_list, cluster_size_list)
     
-    # 2. Slice from unscaled df and then add the cluster label
+    # --- Train Model (Using Unscaled Data) ---
+    # Use same features as K-Means but in physical units
+    active_features = [c for c in df_scaled.columns if c != 'CLUSTER']
     df = sat_final_engineered[active_features].copy()
     df['CLUSTER'] = sat_scaled_clustered['CLUSTER']
-    
-    # 3. Apply the specific drops you require
-    df = df.drop(columns=['AGE_SINCE_LAUNCH', 'REV_AT_EPOCH'], errors='ignore')
-    
-    print("Unscaled Training Features:", df.columns.tolist())
-    print("Total Column Count:", len(df.columns))
-
-    cluster_size_list, sd_list = anomaly_detection.compute_basic_stats(df)
-    contamination_list, n_estimator_list, max_sample_list = anomaly_detection.find_iso_paramters(sd_list, cluster_size_list)
     
     sat_unscaled_labeled, iso_forest_models = anomaly_detection.train_iso_model(df, 
                                                 contamination_list, n_estimator_list, max_sample_list)
