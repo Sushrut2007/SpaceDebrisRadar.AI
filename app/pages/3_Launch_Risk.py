@@ -195,9 +195,6 @@ with col_space:
          st.caption("ℹ️ **Focus:** Analyzes the complete orbital population.")
 
 
-# =============================================================================
-# MAIN ASSESSMENT
-# =============================================================================
 
 # =============================================================================
 # TRIGGER ANALYSIS
@@ -206,34 +203,46 @@ with col_space:
 st.markdown("<br>", unsafe_allow_html=True)
 col_btn, _ = st.columns([1, 2])
 with col_btn:
-    if st.button("🔍 Run Mission Safety Scan", use_container_width=True, type="primary"):
+    if st.button("🔍 Run Mission Safety Scan", use_container_width=True, type="primary", key="mission_safety_scan_btn"):
          # Trigger the scan
          with st.spinner("Analyzing orbital dynamics..."):
-             import time
-             time.sleep(1.2) # Just for the "Scan" feel
-             st.session_state.mission_scan_active = True
+            import time
+            time.sleep(1.2) # Just for the "Scan" feel
+            
+            # Perform Heavy Calculations ONCE
+            alt_min, alt_max = ALT_MAP[alt_band]
+            inc_min, inc_max = INC_MAP[inc_class]
 
-if st.session_state.get('mission_scan_active', False):
-    # Filter Logic (Moved out of function for clarity)
-    alt_min, alt_max = ALT_MAP[alt_band]
-    inc_min, inc_max = INC_MAP[inc_class]
+            env_sats_filtered = sat_df[
+                (sat_df['ORBIT_HEIGHT'] >= alt_min) & (sat_df['ORBIT_HEIGHT'] < alt_max) &
+                (sat_df['INCLINATION'] >= inc_min) & (sat_df['INCLINATION'] < inc_max)
+            ]
 
-    env_sats = sat_df[
-        (sat_df['ORBIT_HEIGHT'] >= alt_min) & (sat_df['ORBIT_HEIGHT'] < alt_max) &
-        (sat_df['INCLINATION'] >= inc_min) & (sat_df['INCLINATION'] < inc_max)
-    ]
+            if density_mode == "Constellations Only":
+                kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
+                env_sats_filtered = env_sats_filtered[env_sats_filtered['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+            elif density_mode == "Non-Constellation Objects":
+                kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
+                env_sats_filtered = env_sats_filtered[~env_sats_filtered['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
+                
+            alt_span = alt_max - alt_min
+            assessment_result = get_live_risk_assessment(env_sats_filtered, trend_df, alt_span)
+            
+            # Store in state
+            st.session_state.mission_scan_active = True
+            st.session_state.scan_results = {
+                "assessment": assessment_result,
+                "env_sats": env_sats_filtered,
+                "alt_band": alt_band,
+                "inc_class": inc_class,
+                "current_alt_idx": current_alt_idx
+            }
 
-    if density_mode == "Constellations Only":
-        kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
-        env_sats = env_sats[env_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
-    elif density_mode == "Non-Constellation Objects":
-        kws = ['STARLINK', 'ONEWEB', 'FLOCK', 'LEMUR']
-        env_sats = env_sats[~env_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
-        
-    # Calculate Span
-    alt_span = alt_max - alt_min
-
-    assessment = get_live_risk_assessment(env_sats, trend_df, alt_span)
+if st.session_state.get('mission_scan_active', False) and 'scan_results' in st.session_state:
+    results = st.session_state.scan_results
+    assessment = results['assessment']
+    env_sats = results['env_sats']
+    
     r_class = assessment['class']
     indicators = assessment['indicators']
 
@@ -287,51 +296,58 @@ if st.session_state.get('mission_scan_active', False):
         st.markdown(indicator_card("Geometric Complexity", indicators['Complexity'], "Natural geometric complexity of the orbit"), unsafe_allow_html=True)
         context_explainer.render_explainer('complexity', f"Rating: {indicators['Complexity']}")
 
-    # HAZARD PROFILE VISUALIZATION (Segmented Status Ring)
-    col_vis, col_spacer = st.columns([1, 1.5])
+    # LIVE DISTRIBUTION SCATTER
+    col_vis, col_spacer = st.columns([1.5, 1])
 
     with col_vis:
-        st.markdown("### ⚠️ Hazard Profile")
-        st.caption("Categorical status of environmental pillars.")
+        st.markdown("### 🛰️ Local Population Density")
+        st.caption(f"Inclination vs. Altitude distribution of {len(env_sats)} objects in target shell.")
         
-        # Define Segments
-        labels = ["Congestion", "Stability", "Complexity"]
-        
-        # Map colors based on state
-        def get_color(val):
-            if val in ["High", "Poor", "Critical"]: return "#ef4444" # Red
-            elif val in ["Medium", "Concern"]: return "#f59e0b" # Orange
-            else: return "#10b981" # Green
+        if not env_sats.empty:
+            # Color by Anomaly Label if it exists
+            if 'ANOMALY_LABEL' in env_sats.columns:
+                color_map = {1: '#60a5fa', -1: '#ef4444'}
+                color_val = env_sats['ANOMALY_LABEL'].map(color_map).fillna('#60a5fa')
+            else:
+                color_val = '#60a5fa'
+                
+            fig = go.Figure(data=[go.Scattergl(
+                x=env_sats['INCLINATION'],
+                y=env_sats['ORBIT_HEIGHT'],
+                mode='markers',
+                marker=dict(
+                    size=7,
+                    color=color_val,
+                    opacity=0.6,
+                    line=dict(width=1, color='rgba(255,255,255,0.1)')
+                ),
+                text=env_sats['OBJECT_NAME'] if 'OBJECT_NAME' in env_sats.columns else "",
+                hovertemplate="<b>%{text}</b><br>Inc: %{x}°<br>Alt: %{y} km<extra></extra>"
+            )])
             
-        colors_mapped = [
-            get_color(indicators['Congestion']),
-            get_color(indicators['Stability']),
-            get_color(indicators['Complexity'])
-        ]
-        
-        # Create Donut Chart with equal segments
-        fig = go.Figure(data=[go.Pie(
-            labels=labels,
-            values=[1, 1, 1], # Equal size
-            marker=dict(colors=colors_mapped, line=dict(color='#000000', width=4)),
-            textinfo='label',
-            hoverinfo='label+text',
-            textfont=dict(size=14, color='white'),
-            hole=0.6,
-            sort=False,
-            direction='clockwise'
-        )])
-        
-        fig.update_layout(
-            showlegend=False,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=20, r=20, t=20, b=20),
-            height=300,
-            annotations=[dict(text=r_class.upper(), x=0.5, y=0.5, font_size=20, showarrow=False, font_weight='bold', font_color='white')]
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(255,255,255,0.02)',
+                margin=dict(l=10, r=10, t=10, b=10),
+                height=350,
+                xaxis=dict(
+                    title="Inclination (degree)", 
+                    gridcolor='rgba(255,255,255,0.05)', 
+                    showgrid=True,
+                    zeroline=False
+                ),
+                yaxis=dict(
+                    title="Altitude (km)", 
+                    gridcolor='rgba(255,255,255,0.05)', 
+                    showgrid=True,
+                    zeroline=False
+                ),
+                font=dict(color='#94a3b8')
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No distribution data available for selected range.")
 
     # =============================================================================
     # SAFER ALTERNATIVES
@@ -397,33 +413,29 @@ if st.session_state.get('mission_scan_active', False):
             <div class="scanner-beam"></div>
             <div class="scanner-icon"></div>
             <div class="scanner-content">
-                The selected regime (<b>""" + alt_band + f"""</b>) is assessed as <b style="color: {colors.get(r_class, '#fff')}">{r_class} Risk</b>. Scanning adjacent bands for improved suitability...
+                The selected regime (<b>""" + results['alt_band'] + f"""</b>) is assessed as <b style="color: {colors.get(r_class, '#fff')}">{r_class} Risk</b>. Scanning adjacent bands for improved suitability...
             </div>
         </div>
         """, unsafe_allow_html=True)
         
         # Check neighbors
         neighbors = []
-        if current_alt_idx > 0: neighbors.append(current_alt_idx - 1)
-        if current_alt_idx < len(ALT_OPTIONS) - 1: neighbors.append(current_alt_idx + 1)
+        if results['current_alt_idx'] > 0: neighbors.append(results['current_alt_idx'] - 1)
+        if results['current_alt_idx'] < len(ALT_OPTIONS) - 1: neighbors.append(results['current_alt_idx'] + 1)
         
         found_better = False
         col_alts = st.columns(len(neighbors))
         
         for i, idx in enumerate(neighbors):
             nb_name = ALT_OPTIONS[idx]
-            
-            # Temp Filter for neighbor
             nb_min, nb_max = ALT_MAP[nb_name]
+            inc_min, inc_max = INC_MAP[results['inc_class']]
+            
             nb_sats = sat_df[
                  (sat_df['ORBIT_HEIGHT'] >= nb_min) & (sat_df['ORBIT_HEIGHT'] < nb_max) &
                  (sat_df['INCLINATION'] >= inc_min) & (sat_df['INCLINATION'] < inc_max)
             ]
-            # (Assuming density mode filters are re-applied or simplified here. 
-            # For speed, we might skip detailed name filtering for alternatives 
-            # or apply it if critical. Let's apply basic filters.)
             
-            # Re-apply Quick Density Filter
             if density_mode == "Constellations Only":
                  nb_sats = nb_sats[nb_sats['OBJECT_NAME'].str.upper().str.contains('|'.join(kws), na=False)]
             elif density_mode == "Non-Constellation Objects":
@@ -432,7 +444,6 @@ if st.session_state.get('mission_scan_active', False):
             nb_span = nb_max - nb_min
             nb_res = get_live_risk_assessment(nb_sats, trend_df, nb_span)
             
-            # Determine if better: Low > Moderate > High
             rank = {"Low": 1, "Moderate": 2, "High": 3}
             is_better = rank[nb_res['class']] < rank[r_class]
             
@@ -454,7 +465,7 @@ if st.session_state.get('mission_scan_active', False):
         if found_better:
             st.success("Recommendation: The highlighted adjacent bands offer a more favorable environmental profile.")
         else:
-            st.info(f"No safer adjacent altitudes found at this inclination ({inc_class}). Consider changing inclination or orbital regime.")
+            st.info(f"No safer adjacent altitudes found at this inclination ({results['inc_class']}). Consider changing inclination or orbital regime.")
 
     st.markdown("---")
     st.caption("Methodology: Environmental Suitability is determined via qualitative classification of aggregated hazard indicators, not numeric probability modeling.")
