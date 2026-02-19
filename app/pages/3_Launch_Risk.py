@@ -18,6 +18,8 @@ if APP_DIR not in sys.path:
     sys.path.insert(1, APP_DIR)
 if COMPONENTS_DIR not in sys.path:
     sys.path.insert(2, COMPONENTS_DIR)
+if PIPELINE_DIR not in sys.path:
+    sys.path.insert(3, PIPELINE_DIR)
 
 import data_loader
 import sidebar

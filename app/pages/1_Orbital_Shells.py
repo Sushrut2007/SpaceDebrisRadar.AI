@@ -13,6 +13,7 @@ import os
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(APP_DIR)
 COMPONENTS_DIR = os.path.join(APP_DIR, 'components')
+PIPELINE_DIR = os.path.join(PROJECT_ROOT, 'pipeline')
 
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -20,6 +21,8 @@ if APP_DIR not in sys.path:
     sys.path.insert(1, APP_DIR)
 if COMPONENTS_DIR not in sys.path:
     sys.path.insert(2, COMPONENTS_DIR)
+if PIPELINE_DIR not in sys.path:
+    sys.path.insert(3, PIPELINE_DIR)
 
 from data_loader import (
     load_satellite_data,
