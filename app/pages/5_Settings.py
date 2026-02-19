@@ -131,7 +131,22 @@ with col4:
     </style>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄 Sync Latest Data & Re-run Pipeline", type="primary"):
+    # Secret Management
+    admin_pass = st.secrets.get("ADMIN_PASSWORD", "dev_mode_pass") # Default for local dev if not in secrets
+    github_token = st.secrets.get("GITHUB_TOKEN")
+    repo_name = "Sushrut2007/SpaceDebrisRadar.AI"
+    workflow_filename = "actions.yml"
+
+    st.markdown("---")
+    st.markdown("#### 🔐 Admin Access")
+    pwd_input = st.text_input("Enter Admin Password to Unlock", type="password")
+    
+    unlocked = (pwd_input == admin_pass)
+    
+    if not unlocked and pwd_input:
+        st.error("Incorrect Password. Access Denied.")
+
+    if st.button("🔄 Sync Latest Data & Re-run Pipeline", type="primary", disabled=not unlocked):
         # Container for the loading state to separate it visually
         loading_container = st.empty()
         
@@ -145,11 +160,8 @@ with col4:
             progress_bar = st.progress(0, text="Initializing Pipeline...")
             
             try:
-                # ----------------------------------------------------------------
-                # HYBRID EXECUTION LOGIC
-                # ----------------------------------------------------------------
-                # Helper to update status with style
-                def update_status(text, step_num):
+                # Helper to update status with style (passed to trigger function)
+                def update_status_ui(text, step_num):
                     status_placeholder.markdown(f"""
                         <div class="progress-step-text">
                             <span>🚀</span>
@@ -157,116 +169,44 @@ with col4:
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Check if running in Cloud mode with Secrets
-                github_token = st.secrets.get("GITHUB_TOKEN")
-                repo_name = "Sushrut2007/SpaceDebrisRadar.AI" # Update if your repo name is different
-                workflow_filename = "actions.yml"
-                
                 if github_token:
                     # --- REMOTE EXECUTION (CLOUD) ---
-                    update_status("Triggering Remote GitHub Action...", 1)
-                    progress_bar.progress(20, text="Contacting GitHub API...")
+                    from app.components import pipeline_trigger
                     
-                    import requests
+                    success = pipeline_trigger.trigger_github_workflow(
+                        repo_name=repo_name,
+                        workflow_filename=workflow_filename,
+                        github_token=github_token,
+                        update_status_func=update_status_ui,
+                        progress_bar=progress_bar
+                    )
                     
-                    headers = {
-                        "Accept": "application/vnd.github.v3+json",
-                        "Authorization": f"token {github_token}",
-                    }
-                    
-                    # API Endpoint to dispatch workflow
-                    url = f"https://api.github.com/repos/{repo_name}/actions/workflows/{workflow_filename}/dispatches"
-                    data = {"ref": "main"}
-                    
-                    response = requests.post(url, headers=headers, json=data, timeout=10)
-                    
-                    if response.status_code == 204:
-                         progress_bar.progress(20, text="Signal Sent! Waiting for GitHub to start...")
-                         
-                         # Poll for status
-                         workflow_id = "actions.yml" # Or workflow filename
-                         runs_url = f"https://api.github.com/repos/{repo_name}/actions/workflows/{workflow_id}/runs"
-                         
-                         # Give it a moment to register
-                         time.sleep(3)
-                         
-                         max_retries = 60 # 5 minutes max (60 * 5s)
-                         current_run = None
-                         
-                         for i in range(max_retries):
-                             try:
-                                 # Get latest run
-                                 r = requests.get(runs_url, headers=headers)
-                                 if r.status_code == 200:
-                                     runs = r.json().get("workflow_runs", [])
-                                     if runs:
-                                         # Look for the most recent run (created just now)
-                                         latest_run = runs[0]
-                                         run_status = latest_run.get("status") # queued, in_progress, completed
-                                         conclusion = latest_run.get("conclusion") # success, failure, etc.
-                                         
-                                         if run_status == "queued":
-                                             progress_bar.progress(30, text="Job is Queued on GitHub...")
-                                             update_status("Waiting for a server...", 1)
-                                         
-                                         elif run_status == "in_progress":
-                                              progress_bar.progress(60, text="Pipeline is Running on GitHub...")
-                                              update_status(f"Processing data remotely... (Time elapsed: {i*5}s)", 3)
-                                              
-                                         elif run_status == "completed":
-                                             if conclusion == "success":
-                                                 progress_bar.progress(100, text="Pipeline Finished Successfully!")
-                                                 st.toast("Pipeline Update Completed Successfully!", icon="✅")
-                                                 st.markdown("""
-                                                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                                                        <h4 style="color: #10b981; margin: 0;">✅ Remote Analysis Complete</h4>
-                                                        <p style="color: #e0e0e0; margin-top: 5px;">
-                                                            Process finished. If new data was found, the app will auto-refresh shortly.
-                                                            <br><span style="font-size: 0.9em; opacity: 0.8;">(If nothing happens, your data is already up to date.)</span>
-                                                        </p>
-                                                    </div>
-                                                """, unsafe_allow_html=True)
-                                                 time.sleep(4)
-                                                 st.rerun()
-                                                 break # Done
-                                             else:
-                                                 st.error(f"Remote Pipeline Failed with status: {conclusion}")
-                                                 break
-                                         
-                                 time.sleep(5)
-                             except Exception as e:
-                                 st.warning(f"Could not fetch status: {e}")
-                                 time.sleep(5)
-                         else:
-                             st.info("Timeout: Pipeline is still running, but we stopped watching. usage limits.")
-                             
-                    else:
-                        raise Exception(f"GitHub API Error: {response.status_code} - {response.text}")
+                    if success:
+                        st.toast("Pipeline Update Completed Successfully!", icon="✅")
+                        st.markdown("""
+                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                                <h4 style="color: #10b981; margin: 0;">✅ Remote Analysis Complete</h4>
+                                <p style="color: #e0e0e0; margin-top: 5px;">
+                                    Process finished. The dashboard will auto-refresh shortly with the latest data.
+                                </p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        time.sleep(4)
+                        st.rerun()
 
                 else:
                     # --- LOCAL EXECUTION (DEV) ---
-                    status_placeholder.markdown(f"""
-                        <div class="progress-step-text">
-                            <span>🚀</span>
-                            <span>Running Local Pipeline... <span class="progress-highlight">(This may take a moment)</span></span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
+                    update_status_ui("Running Local Pipeline...", 1)
                     progress_bar.progress(30, text="Processing...")
                     
                     # Ensure pipeline module is available
                     if run_pipeline is None:
                         raise ImportError(f"Could not import run_pipeline. Error: {pipeline_error}")
                         
-                    # Capture stdout to avoid clutter or handle logging if needed
-                    # For now, just run it directly
                     run_pipeline.main()
                     
-                    # ----------------------------------------------------------------
                     # COMPLETION
-                    # ----------------------------------------------------------------
                     data_loader.clear_cache()
-                    
                     progress_bar.progress(100, text="Pipeline Execution Complete!")
                     
                     st.markdown("""
