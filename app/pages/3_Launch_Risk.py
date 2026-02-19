@@ -12,8 +12,12 @@ PROJECT_ROOT = os.path.dirname(APP_DIR) # .../
 PIPELINE_DIR = os.path.join(PROJECT_ROOT, 'pipeline')
 COMPONENTS_DIR = os.path.join(APP_DIR, 'components')
 
-sys.path.insert(0, COMPONENTS_DIR)
-sys.path.insert(1, PIPELINE_DIR) # Fix for 'import utils' in pipeline modules
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+if APP_DIR not in sys.path:
+    sys.path.insert(1, APP_DIR)
+if COMPONENTS_DIR not in sys.path:
+    sys.path.insert(2, COMPONENTS_DIR)
 
 import data_loader
 import sidebar

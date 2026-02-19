@@ -3,15 +3,17 @@ import time
 import sys
 import os
 
-# Adjust path: Add project root AND pipeline directory to sys.path
-# This ensures that both 'from pipeline import X' AND 'import utils' (internal pipeline calls) work.
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-pipeline_dir = os.path.join(project_root, 'pipeline')
+# Add relevant directories to sys.path
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(APP_DIR)
+COMPONENTS_DIR = os.path.join(APP_DIR, 'components')
 
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-if pipeline_dir not in sys.path:
-    sys.path.insert(1, pipeline_dir)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+if APP_DIR not in sys.path:
+    sys.path.insert(1, APP_DIR)
+if COMPONENTS_DIR not in sys.path:
+    sys.path.insert(2, COMPONENTS_DIR)
 
 from app.components import ui_theme
 from app.components import data_loader

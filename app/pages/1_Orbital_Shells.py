@@ -9,10 +9,17 @@ import plotly.graph_objects as go
 import sys
 import os
 
-# Add components directory to path
+# Add relevant directories to sys.path
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(APP_DIR)
 COMPONENTS_DIR = os.path.join(APP_DIR, 'components')
-sys.path.insert(0, COMPONENTS_DIR)
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+if APP_DIR not in sys.path:
+    sys.path.insert(1, APP_DIR)
+if COMPONENTS_DIR not in sys.path:
+    sys.path.insert(2, COMPONENTS_DIR)
 
 from data_loader import (
     load_satellite_data,
