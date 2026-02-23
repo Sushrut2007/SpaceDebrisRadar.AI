@@ -2,5 +2,4 @@
 
 A Machine Learning powered satellite traffic anomaly detection tool.
 
-🚧 This project is currently under development.
- 
+Demo link: https://sushrut2007-spacedebrisradar-ai-apphome-eer04n.streamlit.app/
